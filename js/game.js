@@ -8,7 +8,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.0.4";
+} from "./data.js?v=1.0.5";
 import {
   createWorld,
   T,
@@ -17,8 +17,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.0.4";
-import { STORAGE_KEY } from "./version.js?v=1.0.4";
+} from "./world.js?v=1.0.5";
+import { STORAGE_KEY } from "./version.js?v=1.0.5";
 
 export const MODE = {
   MENU: "menu",
@@ -693,8 +693,11 @@ export class Game {
 
   _burnZombies(dt) {
     for (const z of this.zombies) {
+      if (z.hp <= 0) continue;
       z.hp -= 40 * dt;
       if (Math.random() < 0.08) this.burst(z.x, z.y, 2, "#f4d35e", 30);
+      // Sol: conta o nocaute só no cruzamento letal (sem floater de dano a cada frame).
+      if (z.hp <= 0) this.kills += 1;
     }
     this.zombies = this.zombies.filter((z) => z.hp > 0);
   }
@@ -820,6 +823,7 @@ export class Game {
         continue;
       }
       for (const z of this.zombies) {
+        if (z.hp <= 0) continue;
         const r = z.kind === "bruto" ? 15 : 11;
         if (dist(a.x, a.y, z.x, z.y) < r + 14) {
           this._hurtZombie(z, a.dmg, a.vx * 0.15, a.vy * 0.15);
@@ -837,6 +841,7 @@ export class Game {
       t.cd = Math.max(0, t.cd - dt);
       if (t.uses <= 0 || t.cd > 0) continue;
       for (const z of this.zombies) {
+        if (z.hp <= 0) continue;
         if (dist(z.x, z.y, t.x, t.y) < 18) {
           t.cd = 0.8;
           t.uses -= 1;
@@ -856,6 +861,7 @@ export class Game {
   _hurtZombie(z, dmg, kx, ky, src = "world") {
     if (!z || z === this.player) return;
     if (!Number.isFinite(dmg) || dmg <= 0) return;
+    if (z.hp <= 0) return;
     z.hp -= dmg;
     z.hurt = 0.35;
     if (Number.isFinite(kx)) z.x += kx * 0.012;
