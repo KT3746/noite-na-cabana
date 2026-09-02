@@ -8,7 +8,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.0.1";
+} from "./data.js?v=1.0.3";
 import {
   createWorld,
   T,
@@ -17,8 +17,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.0.1";
-import { STORAGE_KEY } from "./version.js?v=1.0.1";
+} from "./world.js?v=1.0.3";
+import { STORAGE_KEY } from "./version.js?v=1.0.3";
 
 export const MODE = {
   MENU: "menu",
@@ -55,7 +55,11 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.viewW = 800;
     this.viewH = 450;
-    this.nightLight = 0;
+    this.uiLock = 0;
+    this.overSnap = null;
+    this.mark = null;
+    this.buildGhost = null;
+    this.deathBy = "";
     this.resetRun();
   }
 
@@ -68,8 +72,8 @@ export class Game {
       vx: 0,
       vy: 0,
       r: 10,
-      hp: 100,
-      maxHp: 100,
+      hp: 140,
+      maxHp: 140,
       facing: 0,
       walk: 0,
       atkCd: 0,
@@ -101,13 +105,45 @@ export class Game {
     this.spawnT = 0;
     this.transT = 0;
     this.kills = 0;
+    this.nightLight = 0;
+    this.particles = [];
+    this.floaters = [];
+    this.toasts = [];
+    this.banner = "";
+    this.bannerT = 0;
+    this.shake = 0;
+    this.flash = 0;
+    this.showCraft = false;
+    this.uiLock = 0;
+    this.overSnap = null;
+    this.mark = null;
+    this.buildGhost = null;
+    this.deathBy = "";
+    if (this.audio) this.audio.setNight(false);
+  }
+
+  setMode(mode) {
+    this.mode = mode;
+    this.uiLock = 0.4;
+    try {
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    } catch (_) { /* ok */ }
+  }
+
+  goMenu() {
+    this.setMode(MODE.MENU);
+    this.showCraft = false;
+    this.loadBest();
   }
 
   start() {
     this.resetRun();
-    this.mode = MODE.PLAY;
+    this.setMode(MODE.PLAY);
     this.showCraft = false;
     this.showTutorial = !this.seenTutorial;
+    if (this.showTutorial) this.uiLock = 0.55;
+    this.nightLight = 0;
+    this.phase = PHASE.DAY;
     this._banner("O dia começa — colete, plante e fortaleça.");
     this.audio.setNight(false);
   }
@@ -157,26 +193,33 @@ export class Game {
   }
 
   update(dt, input) {
+    if (this.uiLock > 0) this.uiLock = Math.max(0, this.uiLock - dt);
+    if (this.mark) {
+      this.mark.t -= dt;
+      if (this.mark.t <= 0) this.mark = null;
+    }
+
     if (this.mode === MODE.MENU || this.mode === MODE.OVER) {
       this._updateFx(dt);
+      input.consumePresses();
       return;
     }
 
-    if (input.pausePressed && this.mode === MODE.PLAY && !this.showTutorial) {
+    if (input.pausePressed && this.mode === MODE.PLAY && !this.showTutorial && this.uiLock <= 0) {
       if (this.showCraft) {
         this.showCraft = false;
         this.audio.ui();
         input.consumePresses();
         return;
       }
-      this.mode = MODE.PAUSE;
+      this.setMode(MODE.PAUSE);
       this.audio.ui();
       input.consumePresses();
       return;
     }
     if (this.mode === MODE.PAUSE) {
-      if (input.pausePressed) {
-        this.mode = MODE.PLAY;
+      if (input.pausePressed && this.uiLock <= 0) {
+        this.setMode(MODE.PLAY);
         this.audio.ui();
       }
       input.consumePresses();
@@ -188,10 +231,17 @@ export class Game {
       return;
     }
 
-    if (input.craftPressed) {
+    if (input.craftPressed && this.uiLock <= 0) {
       this.showCraft = !this.showCraft;
       this.audio.ui();
     }
+
+    if (this.showCraft) {
+      this._updateFx(dt);
+      input.consumePresses();
+      return;
+    }
+
     if (input.hotbarKey >= 0) this.hot = input.hotbarKey;
 
     this.shake = Math.max(0, this.shake - dt * 18);
@@ -210,7 +260,7 @@ export class Game {
       if (this.transT <= 0) this._beginDay();
     } else if (this.phase === PHASE.DAY) {
       this.phaseT -= dt;
-      if (this.phaseT <= 0 || input.skipPressed) this._beginDusk();
+      if (this.phaseT <= 0 || (input.skipPressed && this.uiLock <= 0)) this._beginDusk();
       this._growCrops(dt);
     } else if (this.phase === PHASE.NIGHT) {
       this.phaseT -= dt;
@@ -258,7 +308,7 @@ export class Game {
       p.walk *= 0.9;
     }
 
-    if (input.hasPointer) {
+    if (input.hasPointer && !input.touchEnabled && !input._stick.active) {
       p.aim = Math.atan2(input.worldY - p.y, input.worldX - p.x);
     } else {
       p.aim = p.facing;
@@ -286,10 +336,57 @@ export class Game {
       if (wantAct && !input.actionPressed) this._tryInteract(dt);
     }
 
-    const cabin = this.world.cabin;
+    if (input.worldClick) {
+      this.mark = { x: input.worldX, y: input.worldY, t: 0.35 };
+    }
+
+    this._refreshGhost();
     this.cam.x = clamp(p.x - this.viewW / 2, 0, Math.max(0, this.world.w - this.viewW));
     this.cam.y = clamp(p.y - this.viewH / 2, 0, Math.max(0, this.world.h - this.viewH));
-    this._lookCabin = cabin;
+  }
+
+  _refreshGhost() {
+    if (this.hot < 1 || this.hot > 3) {
+      this.buildGhost = null;
+      return;
+    }
+    const p = this.player;
+    const ang = p.aim ?? p.facing ?? 0;
+    const tile = this._placeTile(ang);
+    this.buildGhost = tile;
+  }
+
+  _placeTile(ang) {
+    const p = this.player;
+    const dirs = [
+      [Math.cos(ang) * 1.2, Math.sin(ang) * 1.2],
+      [Math.cos(ang) * 0.7, Math.sin(ang) * 0.7],
+      [0, 0],
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ];
+    for (const [ox, oy] of dirs) {
+      const tx = Math.floor(p.x / TILE + ox);
+      const ty = Math.floor(p.y / TILE + oy);
+      const x = (tx + 0.5) * TILE;
+      const y = (ty + 0.5) * TILE;
+      const t = this.world.at(tx, ty);
+      if (t !== T.GRASS && t !== T.DIRT) continue;
+      if (circleHitsSolid(this.world, x, y, 10, { forZombie: false })) continue;
+      const occupied =
+        this.world.fences.some((f) => f.tx === tx && f.ty === ty && f.hp > 0) ||
+        this.world.torches.some((o) => o.tx === tx && o.ty === ty) ||
+        this.world.traps.some((o) => o.tx === tx && o.ty === ty && o.uses > 0);
+      if (occupied) continue;
+      return { tx, ty, x, y, ok: true };
+    }
+    return {
+      tx: Math.floor(p.x / TILE + Math.cos(ang) * 1.2),
+      ty: Math.floor(p.y / TILE + Math.sin(ang) * 1.2),
+      ok: false,
+    };
   }
 
   _weapon() {
@@ -318,13 +415,14 @@ export class Game {
     p.swinging = 0.18;
     let hit = false;
     for (const z of this.zombies) {
-      if (z.hp <= 0) continue;
+      if (!z || z === p || z.hp <= 0) continue;
+      if (!Number.isFinite(z.x) || !Number.isFinite(z.y)) continue;
       const d = dist(p.x, p.y, z.x, z.y);
-      if (d > w.alcance + z.r) continue;
+      if (!Number.isFinite(d) || d > w.alcance + (z.r || 12) + 22) continue;
       const a = Math.atan2(z.y - p.y, z.x - p.x);
       const diff = Math.abs(Math.atan2(Math.sin(a - ang), Math.cos(a - ang)));
-      if (d > 38 && diff > 1.45) continue;
-      this._hurtZombie(z, w.dano, Math.cos(ang) * w.knock, Math.sin(ang) * w.knock);
+      if (d > 62 && diff > 1.95) continue;
+      this._hurtZombie(z, w.dano, Math.cos(ang) * w.knock, Math.sin(ang) * w.knock, "attack");
       hit = true;
     }
     if (hit) {
@@ -436,34 +534,23 @@ export class Game {
       this.toast(`Você não tem ${kind}s. Crie no menu.`);
       return;
     }
-    const tx = Math.floor(p.x / TILE + Math.cos(p.facing) * 1.15);
-    const ty = Math.floor(p.y / TILE + Math.sin(p.facing) * 1.15);
-    const x = (tx + 0.5) * TILE;
-    const y = (ty + 0.5) * TILE;
-    const t = this.world.at(tx, ty);
-    if (t !== T.GRASS && t !== T.DIRT) {
+    const ang = p.aim ?? p.facing ?? 0;
+    const tile = this._placeTile(ang);
+    if (!tile || !tile.ok) {
       this.toast("Não dá para construir aqui.");
-      return;
-    }
-    if (circleHitsSolid(this.world, x, y, 10, { forZombie: false })) {
-      this.toast("Espaço ocupado.");
-      return;
-    }
-    const occupied =
-      this.world.fences.some((f) => f.tx === tx && f.ty === ty && f.hp > 0) ||
-      this.world.torches.some((o) => o.tx === tx && o.ty === ty) ||
-      this.world.traps.some((o) => o.tx === tx && o.ty === ty && o.uses > 0);
-    if (occupied) {
-      this.toast("Já existe algo neste bloco.");
+      this.mark = { x: p.x, y: p.y, t: 0.3 };
       return;
     }
     this.inv[key] -= 1;
+    const { x, y, tx, ty } = tile;
     if (kind === "cerca") this.world.fences.push({ x, y, tx, ty, hp: 55, max: 55 });
     if (kind === "tocha") this.world.torches.push({ x, y, tx, ty });
     if (kind === "armadilha") this.world.traps.push({ x, y, tx, ty, uses: 3, cd: 0 });
     this.audio.place();
-    this.burst(x, y, 6, "#c4a574", 40);
+    this.burst(x, y, 8, "#c4a574", 50);
+    this.mark = { x, y, t: 0.45 };
     this.toast(`Colocou ${kind}.`);
+    p.actCd = 0.2;
   }
 
   _tryRepair() {
@@ -497,9 +584,9 @@ export class Game {
       return;
     }
     this.inv.comida -= 1;
-    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 28);
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 36);
     this.audio.eat();
-    this.floater(this.player.x, this.player.y - 16, "+28 vida", "#e07a5f");
+    this.floater(this.player.x, this.player.y - 16, "+36 vida", "#e07a5f");
   }
 
   craft(id) {
@@ -566,12 +653,18 @@ export class Game {
   _beginNight() {
     this.phase = PHASE.NIGHT;
     const n = this.nightsSurvived + 1;
-    this.phaseMax = NIGHT_BASE + n * 7;
+    this.phaseMax = n === 1 ? 44 : NIGHT_BASE + n * 7;
     this.phaseT = this.phaseMax;
     this.wave = 0;
-    this.spawnT = 0;
-    this._spawnWaves(0.05);
-    this._banner(`Noite ${n} — defenda a cabana!`);
+    if (n === 1) {
+      this.spawnT = 4.2;
+      this._banner("Toque em Atacar quando o zumbi chegar perto");
+      this.toast("Fique na porta. Atacar acerta de perto. Coma se a vida baixar.");
+    } else {
+      this.spawnT = 0;
+      this._spawnWaves(0.05);
+      this._banner(`Noite ${n} — defenda a cabana!`);
+    }
   }
 
   _beginDawn() {
@@ -592,6 +685,7 @@ export class Game {
     this.phaseMax = DAY_LEN;
     this.phaseT = DAY_LEN;
     this.zombies = [];
+    this.nightLight = 0;
     respawnMorning(this.world);
     this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
     this.toast("Um novo dia. Recursos voltaram a crescer.");
@@ -608,13 +702,23 @@ export class Game {
   _spawnWaves(dt) {
     this.spawnT -= dt;
     const night = this.nightsSurvived + 1;
-    if (this.spawnT <= 0) {
-      this.wave += 1;
-      const count = 3 + night + Math.min(4, this.wave);
-      for (let i = 0; i < count; i++) this._spawnZombie(night);
-      this.spawnT = 11.5;
-      if (this.wave === 1) this.toast("Uma onda se aproxima…");
+    if (this.spawnT > 0) return;
+    this.wave += 1;
+    let count;
+    let gap;
+    if (night === 1) {
+      count = this.wave === 1 ? 2 : 3;
+      gap = 14;
+    } else if (night === 2) {
+      count = 3 + Math.min(2, this.wave);
+      gap = 13;
+    } else {
+      count = 3 + night + Math.min(4, this.wave);
+      gap = 11.5;
     }
+    for (let i = 0; i < count; i++) this._spawnZombie(night);
+    this.spawnT = gap;
+    if (this.wave === 1) this.toast("Uma onda se aproxima…");
   }
 
   _spawnZombie(night) {
@@ -638,7 +742,7 @@ export class Game {
       hpMul,
     });
     const z = this.zombies[this.zombies.length - 1];
-    z.hp = (kind === "bruto" ? 90 : kind === "corredor" ? 20 : 30) * hpMul;
+    z.hp = (kind === "bruto" ? 90 : kind === "corredor" ? 20 : 28) * hpMul;
     z.max = z.hp;
     if (this.zombies.length === 1 || Math.random() < 0.12) this.audio.groan();
   }
@@ -661,7 +765,9 @@ export class Game {
       const ty = preferCabin && toP > 70 ? cabin.doorY : toP < 88 ? p.y : cabin.doorY;
       const ang = Math.atan2(ty - z.y, tx - z.x);
       z.facing = ang;
-      const spd = (z.kind === "corredor" ? 74 : z.kind === "bruto" ? 24 : 36) * (z.slow ? 0.55 : 1);
+      const night = this.nightsSurvived + 1;
+      const nMul = night === 1 ? 0.85 : night === 2 ? 0.92 : 1;
+      const spd = (z.kind === "corredor" ? 74 : z.kind === "bruto" ? 24 : 32) * nMul * (z.slow ? 0.55 : 1);
       z.slow = Math.max(0, (z.slow || 0) - dt);
       let dx = Math.cos(ang) * spd * dt;
       let dy = Math.sin(ang) * spd * dt;
@@ -676,12 +782,14 @@ export class Game {
 
       if (toP < rad + p.r + 6 && z.atk <= 0) {
         z.atk = 0.85;
-        const dmg = z.kind === "bruto" ? 18 : z.kind === "corredor" ? 7 : 9;
-        this._hurtPlayer(dmg);
+        const dmgMul = night === 1 ? 0.62 : 1;
+        const dmg = (z.kind === "bruto" ? 18 : z.kind === "corredor" ? 7 : 8) * dmgMul;
+        this._hurtPlayer(dmg, "zombie", z.kind || "zumbi");
       }
       if (toC < 38 && z.atk <= 0) {
         z.atk = 1.05;
-        const dmg = z.kind === "bruto" ? 12 : z.kind === "corredor" ? 4 : 5;
+        const dmgMul = night === 1 ? 0.55 : 1;
+        const dmg = (z.kind === "bruto" ? 12 : z.kind === "corredor" ? 4 : 5) * dmgMul;
         this._hurtCabin(dmg);
       }
 
@@ -713,7 +821,7 @@ export class Game {
       }
       for (const z of this.zombies) {
         const r = z.kind === "bruto" ? 15 : 11;
-        if (dist(a.x, a.y, z.x, z.y) < r + 4) {
+        if (dist(a.x, a.y, z.x, z.y) < r + 14) {
           this._hurtZombie(z, a.dmg, a.vx * 0.15, a.vy * 0.15);
           a.life = 0;
           this.audio.hit();
@@ -745,14 +853,18 @@ export class Game {
     this.world.fences = this.world.fences.filter((f) => f.hp > 0);
   }
 
-  _hurtZombie(z, dmg, kx, ky) {
+  _hurtZombie(z, dmg, kx, ky, src = "world") {
+    if (!z || z === this.player) return;
+    if (!Number.isFinite(dmg) || dmg <= 0) return;
     z.hp -= dmg;
-    z.hurt = 0.12;
-    z.x += (kx || 0) * 0.012;
-    z.y += (ky || 0) * 0.012;
+    z.hurt = 0.35;
+    if (Number.isFinite(kx)) z.x += kx * 0.012;
+    if (Number.isFinite(ky)) z.y += ky * 0.012;
     this.burst(z.x, z.y, 5, "#6b7a4b", 70);
+    this.floater(z.x, z.y - 14, `-${Math.round(dmg)}`, "#ffe082");
     if (z.hp <= 0) {
       this.kills += 1;
+      this.floater(z.x, z.y - 22, "nocaute", "#7dce82");
       if (Math.random() < 0.12) {
         this.inv.comida += 1;
         this.floater(z.x, z.y, "+1 comida", "#e07a5f");
@@ -760,16 +872,23 @@ export class Game {
     }
   }
 
-  _hurtPlayer(dmg) {
+  _hurtPlayer(dmg, src = "zombie", kind = "") {
+    if (src === "attack" || src === "self" || src === "player") return;
+    if (!Number.isFinite(dmg) || dmg <= 0) return;
+    if (this.player.hurt > 0.05) return;
+    dmg = Math.min(dmg, 22);
     this.player.hp -= dmg;
-    this.player.hurt = 0.25;
+    this.player.hurt = 0.35;
     this.shake = 7;
     this.flash = 0.15;
+    this.deathBy = kind || src;
     this.audio.hurt();
     this.burst(this.player.x, this.player.y, 6, "#e85d4c", 60);
+    this.floater(this.player.x, this.player.y - 18, `-${Math.round(dmg)}`, "#e85d4c");
   }
 
   _hurtCabin(dmg) {
+    if (!Number.isFinite(dmg) || dmg <= 0) return;
     this.world.cabin.hp -= dmg;
     this.shake = 9;
     this.audio.cabin();
@@ -778,27 +897,45 @@ export class Game {
   }
 
   _checkOver() {
-    if (this.player.hp <= 0 || this.world.cabin.hp <= 0) {
-      this.player.hp = Math.max(0, this.player.hp);
-      this.world.cabin.hp = Math.max(0, this.world.cabin.hp);
-      this.mode = MODE.OVER;
-      this.showCraft = false;
-      this.audio.gameover();
-      if (this.nightsSurvived > this.best) {
-        this.best = this.nightsSurvived;
-        localStorage.setItem(STORAGE_KEY, String(this.best));
-      }
+    if (this.mode === MODE.OVER) return;
+    const dead = this.player.hp <= 0;
+    const cabinDown = this.world.cabin.hp <= 0;
+    if (!dead && !cabinDown) return;
+    this.player.hp = Math.max(0, this.player.hp);
+    this.world.cabin.hp = Math.max(0, this.world.cabin.hp);
+    const nightReached = this.phase === PHASE.DAY || this.phase === PHASE.DAWN
+      ? Math.max(1, this.nightsSurvived)
+      : this.nightsSurvived + 1;
+    let reason = cabinDown && !dead ? "A cabana foi destruída." : "Você foi derrubado.";
+    let detail = `Chegou na noite ${nightReached}.`;
+    if (dead && this.deathBy) detail += ` Golpe de ${this.deathBy}.`;
+    this.overSnap = {
+      nights: this.nightsSurvived,
+      kills: this.kills,
+      nightReached,
+      reason,
+      detail,
+      wave: this.wave,
+    };
+    this.setMode(MODE.OVER);
+    this.showCraft = false;
+    try { this.audio.gameover(); } catch (_) { /* ok */ }
+    if (this.nightsSurvived > this.best) {
+      this.best = this.nightsSurvived;
+      localStorage.setItem(STORAGE_KEY, String(this.best));
     }
   }
 
   dismissTutorial() {
+    if (this.uiLock > 0) return;
     this.showTutorial = false;
     this.seenTutorial = true;
     localStorage.setItem("nnc-tutorial", "1");
   }
 
   skipToNight() {
-    if (this.mode === MODE.PLAY && this.phase === PHASE.DAY) this._beginDusk();
+    if (this.uiLock > 0) return;
+    if (this.mode === MODE.PLAY && this.phase === PHASE.DAY && !this.showTutorial) this._beginDusk();
   }
 }
 

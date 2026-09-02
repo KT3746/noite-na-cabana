@@ -13,6 +13,13 @@
   --day: #f4d35e;
   --shadow: 0 10px 28px #00000066;
   --radius: 14px;
+  --z-world: 1;
+  --z-hud: 20;
+  --z-craft: 25;
+  --z-touch: 40;
+  --z-banner: 35;
+  --z-overlay: 80;
+  --z-foot: 56;
   font-synthesis: none;
 }
 
@@ -35,6 +42,7 @@ body {
 
 #app {
   position: relative;
+  isolation: isolate;
   width: 100%;
   height: 100%;
   height: 100dvh;
@@ -42,6 +50,9 @@ body {
 }
 
 #game {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-world);
   display: block;
   width: 100%;
   height: 100%;
@@ -56,14 +67,16 @@ body {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  pointer-events: auto;
   background:
     radial-gradient(ellipse at 50% 120%, #3a2418cc, transparent 55%),
     linear-gradient(180deg, #0b1220dd 0%, #1a120ccc 100%);
-  z-index: 20;
+  z-index: var(--z-overlay);
 }
 
 .hidden {
   display: none !important;
+  pointer-events: none !important;
 }
 
 .card {
@@ -154,19 +167,41 @@ button:disabled {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 10;
+  z-index: var(--z-hud);
 }
 
 .hud * {
   pointer-events: auto;
 }
 
+.hud-stack {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hud-stack > * {
+  pointer-events: auto;
+}
+
+.hud-top {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  background: linear-gradient(#1a1410f2, #1a1410aa 70%, #1a141000);
+  padding: 8px 10px 8px;
+}
+
 .topbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px 10px;
-  background: linear-gradient(#1a1410ee, #1a141000);
+  flex-wrap: wrap;
 }
 
 .chip {
@@ -203,28 +238,59 @@ button:disabled {
 .phase-day { color: #2a1c10; background: #f4d35e; }
 .phase-night { color: #eaf2ff; background: #2b4c7e; }
 
-.resbar {
+.hud-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 0 10px;
+  margin-left: auto;
+}
+
+.hud-actions button {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.resbar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin-top: 6px;
+  width: 100%;
+  position: relative;
+  z-index: 3;
 }
 
 .res {
-  background: #1a1410cc;
+  flex: 1 1 0;
+  min-width: 0;
+  background: #3a2c20ee;
+  border: 1px solid #e8c48a88;
   border-radius: 8px;
-  padding: 3px 8px;
+  padding: 4px 8px;
   font-size: 12px;
   font-weight: 800;
+  color: #fff3d6;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 0 #00000055;
+}
+
+.res span {
+  color: var(--gold);
+  margin-left: 4px;
 }
 
 .hotbar {
   position: absolute;
   left: 50%;
-  bottom: 92px;
+  bottom: 18px;
   transform: translateX(-50%);
   display: flex;
   gap: 6px;
+  z-index: 2;
 }
 
 .slot {
@@ -254,21 +320,6 @@ button:disabled {
   box-shadow: 0 0 0 2px #f2c14e55;
 }
 
-.sidebtns {
-  position: absolute;
-  top: 86px;
-  right: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.sidebtns button {
-  min-height: 44px;
-  padding: 8px 12px;
-  font-size: 14px;
-}
-
 .banner {
   position: absolute;
   top: 28%;
@@ -278,24 +329,24 @@ button:disabled {
   border: 2px solid #f2c14e88;
   color: #ffe7b3;
   font-family: "Lilita One", sans-serif;
-  font-size: clamp(20px, 5vw, 32px);
+  font-size: clamp(18px, 4.6vw, 32px);
   padding: 10px 22px;
   border-radius: 12px;
   pointer-events: none;
   text-align: center;
-  z-index: 12;
+  z-index: var(--z-banner);
   white-space: nowrap;
 }
 
 #toasts {
   position: absolute;
   left: 12px;
-  bottom: 180px;
+  bottom: 90px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   pointer-events: none;
-  z-index: 12;
+  z-index: var(--z-banner);
 }
 
 .toast {
@@ -309,9 +360,10 @@ button:disabled {
 }
 
 .craft {
-  position: absolute;
-  right: 10px;
-  top: 140px;
+  position: relative;
+  z-index: var(--z-craft);
+  align-self: flex-end;
+  margin: 8px 10px 0 0;
   width: min(340px, calc(100% - 20px));
   max-height: min(62vh, 460px);
   overflow: auto;
@@ -319,7 +371,6 @@ button:disabled {
   border: 2px solid #d4a57455;
   border-radius: 16px;
   padding: 12px;
-  z-index: 15;
   box-shadow: var(--shadow);
 }
 
@@ -342,6 +393,11 @@ button:disabled {
   font-size: 14px;
 }
 
+.craft .tagline {
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
 .recipe {
   width: 100%;
   text-align: left;
@@ -360,23 +416,34 @@ button:disabled {
   margin-top: 4px;
 }
 
+.recipe:disabled {
+  pointer-events: none;
+}
+
 .touch {
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 14;
+  z-index: var(--z-touch);
 }
 
 .stick {
   pointer-events: auto;
   position: absolute;
-  left: max(12px, env(safe-area-inset-left));
-  bottom: max(16px, env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(20px, env(safe-area-inset-bottom));
   width: 128px;
   height: 128px;
   border-radius: 50%;
-  background: #00000044;
-  border: 2px solid #ffffff33;
+  background: #00000055;
+  border: 2px solid #ffffff44;
+  touch-action: none;
+  z-index: 2;
+}
+
+.stick.is-active {
+  border-color: #f2c14e;
+  background: #00000077;
 }
 
 #stick-knob {
@@ -385,20 +452,24 @@ button:disabled {
   top: 50%;
   width: 56px;
   height: 56px;
-  margin: -28px 0 0 -28px;
   border-radius: 50%;
-  background: #f2c14ecc;
-  border: 2px solid #fff8;
+  background: #f2c14e;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px #00000066;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  will-change: left, top;
 }
 
 .touch-actions {
   pointer-events: auto;
   position: absolute;
   right: max(10px, env(safe-area-inset-right));
-  bottom: max(16px, env(safe-area-inset-bottom));
+  bottom: max(12px, env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: 72px 72px;
   gap: 10px;
+  z-index: 2;
 }
 
 .touch-actions button {
@@ -424,6 +495,7 @@ button:disabled {
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
+  z-index: 2;
 }
 
 .touch-extra button {
@@ -439,11 +511,18 @@ button:disabled {
   font-size: 11px;
   color: #ffffff66;
   pointer-events: none;
-  z-index: 30;
+  z-index: var(--z-foot);
 }
 
 .muted-icon {
   opacity: 0.55;
+}
+
+#app.craft-open .hud-actions #btn-noite,
+#app.craft-open .hud-actions #btn-eat-hud,
+#app.craft-open .hud-actions #btn-pause {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 @media (pointer: fine) and (min-width: 901px) {
@@ -456,72 +535,192 @@ button:disabled {
 }
 
 @media (pointer: coarse), (max-width: 900px) {
-  .sidebtns #btn-noite,
-  .sidebtns #btn-eat-hud,
-  .sidebtns #btn-pause {
+  .hud-top {
+    padding: 4px 6px 4px;
+  }
+
+  .topbar {
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .hud-label {
     display: none;
   }
 
-  .sidebtns {
-    top: 78px;
-    bottom: auto;
-    right: max(8px, env(safe-area-inset-right));
+  .chip {
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+
+  .chip .bar {
+    width: 36px;
+    height: 6px;
+  }
+
+  .hud-actions {
+    gap: 4px;
+    margin-left: 0;
+  }
+
+  .hud-actions button {
+    min-height: 32px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .hud-actions #btn-noite,
+  .hud-actions #btn-eat-hud,
+  .hud-actions #btn-pause {
+    display: none;
+  }
+
+  .resbar {
+    margin-top: 4px;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .res {
+    padding: 3px 4px;
+    font-size: 10px;
+    border-width: 1px;
   }
 
   .hotbar {
-    bottom: calc(24px + 72px + 56px);
-    max-width: calc(100% - 16px);
-    flex-wrap: nowrap;
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    padding: 0 6px 4px;
+    width: 100%;
     justify-content: center;
+    background: linear-gradient(#1a141088, #1a141000);
+    flex-wrap: nowrap;
   }
 
   .slot {
-    width: 48px;
-    min-height: 48px;
+    width: 52px;
+    min-height: 52px;
     font-size: 9px;
+    padding: 3px;
+    border-radius: 10px;
+  }
+
+  .slot small {
+    font-size: 10px;
   }
 
   .craft {
-    top: 72px;
-    left: 8px;
-    right: 8px;
+    align-self: stretch;
+    margin: 0 6px 6px;
     width: auto;
-    bottom: auto;
-    max-height: calc(100dvh - 300px);
-    z-index: 16;
+    max-height: min(46vh, 360px);
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+
+  .craft-head h2 {
+    font-size: 16px;
+  }
+
+  .craft-head button {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .craft .tagline {
+    display: none;
+  }
+
+  .recipe {
+    margin-bottom: 4px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+
+  .stick {
+    width: 100px;
+    height: 100px;
+    left: max(12px, env(safe-area-inset-left));
+    bottom: max(18px, env(safe-area-inset-bottom));
+  }
+
+  #stick-knob {
+    width: 42px;
+    height: 42px;
+  }
+
+  .touch-actions {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    grid-template-columns: 58px 58px;
+    gap: 10px;
+  }
+
+  .touch-actions button {
+    width: 58px;
+    height: 58px;
+    font-size: 11px;
   }
 
   .touch-extra {
-    left: auto;
-    right: max(10px, env(safe-area-inset-right));
-    bottom: calc(18px + 72px + 10px);
-    transform: none;
+    left: 50%;
+    right: auto;
+    bottom: calc(18px + env(safe-area-inset-bottom) + 64px);
+    transform: translateX(-50%);
     flex-direction: row;
     align-items: center;
+    gap: 6px;
   }
 
   .touch-extra button {
-    min-width: 72px;
-    height: 48px;
+    min-width: 52px;
+    height: 32px;
+    font-size: 11px;
+    padding: 0 8px;
+    border-radius: 8px;
+  }
+
+  .banner {
+    white-space: normal;
+    width: min(92%, 420px);
+    top: auto;
+    bottom: calc(8px + env(safe-area-inset-bottom) + 108px);
+    font-size: 16px;
+    padding: 8px 12px;
   }
 
   #toasts {
-    bottom: 260px;
-    left: 12px;
-    right: 160px;
+    bottom: calc(8px + env(safe-area-inset-bottom) + 108px);
+    left: 8px;
+    right: 130px;
+  }
+
+  .foot {
+    right: 6px;
+    bottom: 2px;
+    font-size: 10px;
   }
 }
 
 @media (max-width: 700px) {
   .chip .bar {
-    width: 48px;
-  }
-  .topbar {
-    flex-wrap: wrap;
+    width: 32px;
   }
   .banner {
     white-space: normal;
     width: min(92%, 420px);
-    top: 18%;
+  }
+}
+
+@media (max-width: 420px) {
+  .chip {
+    font-size: 10px;
+  }
+  .res {
+    font-size: 9px;
+    padding: 3px 3px;
   }
 }

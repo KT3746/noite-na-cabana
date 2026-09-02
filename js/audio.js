@@ -114,7 +114,7 @@ export class AudioSys {
   }
 
   tone(freq, type, dur, vol = 0.12, slide = 0) {
-    if (!this.unlocked || this.muted) return;
+    if (!this.unlocked || this.muted || !this.ctx) return;
     const ctx = this.ctx;
     const o = ctx.createOscillator();
     const g = ctx.createGain();
