@@ -17,7 +17,7 @@ renderer = new Renderer(canvas, game);
 const syncUI = bindUI(game, audio);
 
 document.title = `Noite na Cabana v${VERSION}`;
-window.__NNC = { game, audio, VERSION };
+window.__NNC = { game, audio, input, VERSION, sync: syncUI };
 
 let last = performance.now();
 function frame(now) {
