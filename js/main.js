@@ -1,15 +1,19 @@
-import { VERSION } from "./version.js?v=1.0.3";
-import { AudioSys } from "./audio.js?v=1.0.3";
-import { Input } from "./input.js?v=1.0.3";
-import { Game } from "./game.js?v=1.0.3";
-import { Renderer } from "./render.js?v=1.0.3";
-import { bindUI } from "./ui.js?v=1.0.3";
+import { VERSION } from "./version.js?v=1.0.4";
+import { AudioSys } from "./audio.js?v=1.0.4";
+import { Input } from "./input.js?v=1.0.4";
+import { Game } from "./game.js?v=1.0.4";
+import { Renderer } from "./render.js?v=1.0.4";
+import { bindUI } from "./ui.js?v=1.0.4";
+import { bindViewport } from "./viewport.js?v=1.0.4";
 
+const app = document.getElementById("app");
 const canvas = document.getElementById("game");
 const audio = new AudioSys();
 const input = new Input();
 const game = new Game(audio);
-const renderer = new Renderer(canvas, game);
+let renderer;
+bindViewport(app, () => { if (renderer) renderer.resize(); });
+renderer = new Renderer(canvas, game);
 const syncUI = bindUI(game, audio);
 
 document.title = `Noite na Cabana v${VERSION}`;

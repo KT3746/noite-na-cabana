@@ -1,6 +1,6 @@
-import { TILE, hash2, lerp, WEAPONS } from "./data.js?v=1.0.3";
-import { T } from "./world.js?v=1.0.3";
-import { MODE } from "./game.js?v=1.0.3";
+import { TILE, hash2, lerp, WEAPONS } from "./data.js?v=1.0.4";
+import { T } from "./world.js?v=1.0.4";
+import { MODE } from "./game.js?v=1.0.4";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -12,14 +12,24 @@ export class Renderer {
     this.t = 0;
     this.resize();
     window.addEventListener("resize", () => this.resize());
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", () => this.resize());
+      window.visualViewport.addEventListener("scroll", () => this.resize());
+    }
   }
 
   resize() {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = this.canvas.clientWidth || window.innerWidth;
-    const h = this.canvas.clientHeight || window.innerHeight;
-    this.canvas.width = Math.floor(w * dpr);
-    this.canvas.height = Math.floor(h * dpr);
+    const app = document.getElementById("app");
+    const w = (app && app.clientWidth) || this.canvas.clientWidth || window.innerWidth;
+    const h = (app && app.clientHeight) || this.canvas.clientHeight || window.innerHeight;
+    const bw = Math.floor(w * dpr);
+    const bh = Math.floor(h * dpr);
+    if (this.canvas.width === bw && this.canvas.height === bh && this.game.viewW === w && this.game.viewH === h) {
+      return;
+    }
+    this.canvas.width = bw;
+    this.canvas.height = bh;
     this.light.width = this.canvas.width;
     this.light.height = this.canvas.height;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

@@ -8,7 +8,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.0.3";
+} from "./data.js?v=1.0.4";
 import {
   createWorld,
   T,
@@ -17,8 +17,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.0.3";
-import { STORAGE_KEY } from "./version.js?v=1.0.3";
+} from "./world.js?v=1.0.4";
+import { STORAGE_KEY } from "./version.js?v=1.0.4";
 
 export const MODE = {
   MENU: "menu",
