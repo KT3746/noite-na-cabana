@@ -88,20 +88,20 @@ export const RECIPES = [
     ganha: { cercas: 1 },
   },
   {
-    id: "armadilha",
-    nome: "Armadilha de estacas",
-    desc: "Fere quem pisa em cima (3 usos).",
-    custo: { madeira: 3, pedra: 2 },
-    tipo: "item",
-    ganha: { armadilhas: 1 },
-  },
-  {
     id: "kit",
     nome: "Kit de reparo",
     desc: "Repara a cabana (+45 de vida).",
     custo: { madeira: 4, pedra: 3 },
     tipo: "item",
     ganha: { kits: 1 },
+  },
+  {
+    id: "armadilha",
+    nome: "Armadilha de estacas",
+    desc: "Fere quem pisa em cima (3 usos).",
+    custo: { madeira: 3, pedra: 2 },
+    tipo: "item",
+    ganha: { armadilhas: 1 },
   },
 ];
 

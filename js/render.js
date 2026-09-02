@@ -1,6 +1,6 @@
-import { TILE, hash2, lerp, WEAPONS } from "./data.js?v=1.0.2";
-import { T } from "./world.js?v=1.0.2";
-import { MODE } from "./game.js?v=1.0.2";
+import { TILE, hash2, lerp, WEAPONS } from "./data.js?v=1.0.3";
+import { T } from "./world.js?v=1.0.3";
+import { MODE } from "./game.js?v=1.0.3";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -59,6 +59,8 @@ export class Renderer {
     this._zombies();
     this._player();
     this._arrows();
+    this._ghost();
+    this._mark();
     this._particles();
     this._floaters();
     ctx.restore();
@@ -376,6 +378,15 @@ export class Renderer {
         ctx.globalAlpha = 0.45;
         ctx.fillStyle = "#fff";
         ctx.fillRect(-w / 2, -h / 2 + bob, w, h);
+        ctx.globalAlpha = 1;
+      }
+      const max = z.max || 28;
+      const ratio = Math.max(0, Math.min(1, z.hp / max));
+      if (z.hurt > 0 || ratio < 0.99) {
+        ctx.fillStyle = "#00000088";
+        ctx.fillRect(-w / 2, -h / 2 - 8 + bob, w, 4);
+        ctx.fillStyle = ratio > 0.4 ? "#7dce82" : "#e85d4c";
+        ctx.fillRect(-w / 2, -h / 2 - 8 + bob, w * ratio, 4);
       }
       ctx.restore();
     }
@@ -391,6 +402,33 @@ export class Renderer {
       ctx.lineTo(a.x - a.vx * 0.04, a.y - a.vy * 0.04);
       ctx.stroke();
     }
+  }
+
+  _ghost() {
+    const g = this.game.buildGhost;
+    if (!g) return;
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = g.ok ? "#f2c14e" : "#e85d4c";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(g.tx * TILE + 2, g.ty * TILE + 2, TILE - 4, TILE - 4);
+    ctx.restore();
+  }
+
+  _mark() {
+    const m = this.game.mark;
+    if (!m) return;
+    const ctx = this.ctx;
+    const a = Math.max(0, m.t / 0.35);
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.strokeStyle = "#ffe7b3";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(m.x, m.y, 12 + (1 - a) * 10, 0, 7);
+    ctx.stroke();
+    ctx.restore();
   }
 
   _particles() {

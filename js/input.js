@@ -1,5 +1,6 @@
 /**
  * Teclado, mouse e toque (joystick + botões).
+ * Space/Enter nunca disparam clique em botão focado (isso matava a run).
  */
 export class Input {
   constructor() {
@@ -22,6 +23,7 @@ export class Input {
     this.pausePressed = false;
     this.skipPressed = false;
     this.hotbarKey = -1;
+    this.worldClick = false;
 
     this._keys = new Set();
     this._just = new Set();
@@ -29,9 +31,11 @@ export class Input {
     this._atkBtn = false;
     this._actBtn = false;
     this.touchEnabled = false;
+    this._docMove = null;
+    this._docUp = null;
 
-    window.addEventListener("keydown", (e) => this._down(e));
-    window.addEventListener("keyup", (e) => this._up(e));
+    window.addEventListener("keydown", (e) => this._down(e), true);
+    window.addEventListener("keyup", (e) => this._up(e), true);
 
     const canvas = () => document.getElementById("game");
     const onPtr = (e) => {
@@ -49,6 +53,7 @@ export class Input {
         this.pointerDown = true;
         this.actionPressed = true;
         this.actionHeld = true;
+        this.worldClick = true;
       }
     });
     window.addEventListener("pointerup", () => {
@@ -62,11 +67,21 @@ export class Input {
     this._bindTouch();
   }
 
-  _down(e) {
-    if (e.repeat) return;
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
+  _blockBrowserBtn(e) {
+    if (e.code === "Space") {
+      e.preventDefault();
+      e.stopPropagation();
+      return true;
+    }
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
       e.preventDefault();
     }
+    return false;
+  }
+
+  _down(e) {
+    const blocked = this._blockBrowserBtn(e);
+    if (e.repeat) return;
     this._keys.add(e.code);
     this._just.add(e.code);
     if (e.code === "Space") this.attackPressed = true;
@@ -78,9 +93,13 @@ export class Input {
     const nums = ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5"];
     const i = nums.indexOf(e.code);
     if (i >= 0) this.hotbarKey = i;
+    if (blocked && e.code === "Enter") {
+      /* Enter em overlay visível segue o botão; no jogo não */
+    }
   }
 
   _up(e) {
+    this._blockBrowserBtn(e);
     this._keys.delete(e.code);
   }
 
@@ -118,14 +137,26 @@ export class Input {
       setKnob(dx, dy);
     };
 
+    const unbindDoc = () => {
+      if (this._docMove) {
+        window.removeEventListener("pointermove", this._docMove, true);
+        window.removeEventListener("pointerup", this._docUp, true);
+        window.removeEventListener("pointercancel", this._docUp, true);
+        this._docMove = null;
+        this._docUp = null;
+      }
+    };
+
     const endStick = (e) => {
-      if (this._stick.id != null && e && e.pointerId !== this._stick.id) return;
+      if (!this._stick.active) return;
+      if (this._stick.id != null && e && e.pointerId != null && e.pointerId !== this._stick.id) return;
       this._stick.active = false;
       this._stick.x = 0;
       this._stick.y = 0;
       this._stick.id = null;
       stick.classList.remove("is-active");
       setKnob(0, 0);
+      unbindDoc();
     };
 
     const onMove = (e) => {
@@ -143,41 +174,45 @@ export class Input {
       try {
         stick.setPointerCapture(e.pointerId);
       } catch (_) {
-        /* alguns navegadores mobile não expõem capture */
+        /* ok */
       }
       setFrom(e.clientX, e.clientY);
+      unbindDoc();
+      this._docMove = onMove;
+      this._docUp = endStick;
+      window.addEventListener("pointermove", onMove, { capture: true, passive: false });
+      window.addEventListener("pointerup", endStick, { capture: true });
+      window.addEventListener("pointercancel", endStick, { capture: true });
     }, { passive: false });
 
     stick.addEventListener("pointermove", onMove, { passive: false });
     stick.addEventListener("pointerup", endStick);
     stick.addEventListener("pointercancel", endStick);
 
-    window.addEventListener("pointermove", onMove, { passive: false });
-    window.addEventListener("pointerup", endStick);
-    window.addEventListener("pointercancel", endStick);
-
     const onTouchMove = (e) => {
       if (!this._stick.active || !e.touches || !e.touches.length) return;
       if (e.cancelable) e.preventDefault();
-      const t = e.touches[0];
+      const t = [...e.touches].find((x) => x.identifier === this._stick.id) || e.touches[0];
       setFrom(t.clientX, t.clientY);
     };
     stick.addEventListener("touchstart", (e) => {
       if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
       const t = e.changedTouches[0];
       this.touchEnabled = true;
       this._stick.id = t.identifier;
       setFrom(t.clientX, t.clientY);
     }, { passive: false });
     stick.addEventListener("touchmove", onTouchMove, { passive: false });
-    stick.addEventListener("touchend", () => endStick());
-    stick.addEventListener("touchcancel", () => endStick());
+    stick.addEventListener("touchend", (e) => endStick(e));
+    stick.addEventListener("touchcancel", (e) => endStick(e));
 
     const hold = (id, propHeld, propPress) => {
       const el = document.getElementById(id);
       if (!el) return;
       const start = (e) => {
         if (e.cancelable) e.preventDefault();
+        e.stopPropagation();
         this.touchEnabled = true;
         this[propHeld] = true;
         if (propPress) this[propPress] = true;
@@ -202,6 +237,7 @@ export class Input {
       if (!el) return;
       el.addEventListener("pointerdown", (e) => {
         if (e.cancelable) e.preventDefault();
+        e.stopPropagation();
         this.touchEnabled = true;
         this[prop] = true;
       }, { passive: false });
@@ -238,6 +274,7 @@ export class Input {
     this.pausePressed = false;
     this.skipPressed = false;
     this.hotbarKey = -1;
+    this.worldClick = false;
     this._just.clear();
   }
 }

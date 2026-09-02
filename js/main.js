@@ -1,9 +1,9 @@
-import { VERSION } from "./version.js?v=1.0.2";
-import { AudioSys } from "./audio.js?v=1.0.2";
-import { Input } from "./input.js?v=1.0.2";
-import { Game } from "./game.js?v=1.0.2";
-import { Renderer } from "./render.js?v=1.0.2";
-import { bindUI } from "./ui.js?v=1.0.2";
+import { VERSION } from "./version.js?v=1.0.3";
+import { AudioSys } from "./audio.js?v=1.0.3";
+import { Input } from "./input.js?v=1.0.3";
+import { Game } from "./game.js?v=1.0.3";
+import { Renderer } from "./render.js?v=1.0.3";
+import { bindUI } from "./ui.js?v=1.0.3";
 
 const canvas = document.getElementById("game");
 const audio = new AudioSys();
