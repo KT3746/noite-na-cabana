@@ -4,7 +4,7 @@ Jogo de navegador (PC e celular): de **dia** você cultiva, coleta e fortalece u
 
 **Jogue agora:** [https://kt3746.github.io/noite-na-cabana/](https://kt3746.github.io/noite-na-cabana/)
 
-Versão atual: **1.0.3** (aparece no rodapé da tela).
+Versão atual: **1.0.4** (aparece no rodapé da tela).
 
 ## Como jogar
 
@@ -66,7 +66,7 @@ Não precisa instalar dependências: é HTML + CSS + JavaScript puro.
 - `index.html` — página do jogo (GitHub Pages aponta para a raiz de `main`)
 - `css/game.css` — interface
 - `js/` — lógica, desenho, som e controles
-- Os arquivos usam `?v=1.0.3` para o navegador não ficar com versão antiga após uma atualização
+- Os arquivos usam `?v=1.0.4` para o navegador não ficar com versão antiga após uma atualização
 
 ## Créditos
 

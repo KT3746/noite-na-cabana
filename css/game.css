@@ -31,22 +31,30 @@
 html,
 body {
   margin: 0;
+  width: 100%;
   height: 100%;
+  height: 100dvh;
   background: var(--bg);
   color: var(--ink);
   font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
   overflow: hidden;
+  overscroll-behavior: none;
+  position: relative;
   user-select: none;
   touch-action: none;
+  -webkit-text-size-adjust: 100%;
 }
 
 #app {
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 0;
   isolation: isolate;
   width: 100%;
   height: 100%;
   height: 100dvh;
   overflow: hidden;
+  transform: none;
 }
 
 #game {
@@ -67,11 +75,15 @@ body {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
   pointer-events: auto;
+  touch-action: manipulation;
   background:
     radial-gradient(ellipse at 50% 120%, #3a2418cc, transparent 55%),
     linear-gradient(180deg, #0b1220dd 0%, #1a120ccc 100%);
   z-index: var(--z-overlay);
+  transform: none;
 }
 
 .hidden {
@@ -80,13 +92,17 @@ body {
 }
 
 .card {
+  position: relative;
   width: min(520px, 100%);
-  background: var(--panel);
+  background: var(--panel-solid);
   border: 2px solid #d4a57455;
   border-radius: 18px;
   padding: 22px 22px 18px;
   box-shadow: var(--shadow);
-  backdrop-filter: blur(8px);
+  /* sem backdrop-filter/transform: no Safari/Chrome mobile isso
+     desloca o hit-test dos botões para longe do desenho */
+  transform: none;
+  filter: none;
 }
 
 .card h1 {
@@ -144,9 +160,15 @@ button,
   cursor: pointer;
 }
 
+.overlay button {
+  position: relative;
+  z-index: 2;
+  min-height: 48px;
+  touch-action: manipulation;
+}
+
 button:active,
 .btn:active {
-  transform: translateY(2px);
   box-shadow: 0 1px 0 #8a5a1a;
 }
 
@@ -421,10 +443,11 @@ button:disabled {
 }
 
 .touch {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: var(--z-touch);
+  transform: none;
 }
 
 .stick {

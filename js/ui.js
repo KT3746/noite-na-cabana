@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=1.0.3";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.0.3";
-import { MODE, PHASE } from "./game.js?v=1.0.3";
+import { VERSION } from "./version.js?v=1.0.4";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.0.4";
+import { MODE, PHASE } from "./game.js?v=1.0.4";
 
 export function bindUI(game, audio) {
   const $ = (id) => document.getElementById(id);
@@ -29,45 +29,77 @@ export function bindUI(game, audio) {
     syncScreens(game);
   };
 
-  $("btn-start").onclick = safe(() => {
+  /* pointerup no rótulo visível — click sozinho no mobile chega
+     com coordenada da viewport de layout, não da visual. */
+  const bindTap = (id, fn) => {
+    const el = $(id);
+    if (!el) return;
+    let last = 0;
+    const run = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const now = performance.now();
+      if (now - last < 350) return;
+      last = now;
+      safe(fn)(e);
+    };
+    el.addEventListener("pointerdown", (e) => {
+      if (e.button != null && e.button !== 0) return;
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      try { el.setPointerCapture(e.pointerId); } catch (_) { /* ok */ }
+    }, { passive: false });
+    el.addEventListener("pointerup", (e) => {
+      if (e.button != null && e.button !== 0) return;
+      run(e);
+    });
+    el.addEventListener("click", run);
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") run(e);
+    });
+  };
+
+  bindTap("btn-start", () => {
     game.start();
   });
-  $("btn-resume").onclick = safe(() => {
+  bindTap("btn-resume", () => {
     game.setMode(MODE.PLAY);
   });
-  $("btn-restart").onclick = safe(() => {
+  bindTap("btn-restart", () => {
     game.restart();
   });
-  $("btn-restart-over").onclick = safe(() => {
+  bindTap("btn-restart-over", () => {
     game.restart();
   });
-  $("btn-menu").onclick = safe(() => {
+  bindTap("btn-menu", () => {
     game.goMenu();
   });
-  $("btn-menu-over").onclick = safe(() => {
+  bindTap("btn-menu-over", () => {
     game.goMenu();
   });
-  $("btn-craft").onclick = safe(() => {
+  bindTap("btn-craft", () => {
     if (game.mode !== MODE.PLAY || game.showTutorial) return;
     game.showCraft = !game.showCraft;
   });
-  $("btn-craft-close").onclick = safe(() => {
+  bindTap("btn-craft-close", () => {
     game.showCraft = false;
   });
-  $("btn-pause").onclick = safe(() => {
+  bindTap("btn-pause", () => {
     if (game.mode === MODE.PLAY) game.setMode(MODE.PAUSE);
     else if (game.mode === MODE.PAUSE) game.setMode(MODE.PLAY);
   });
-  $("btn-noite").onclick = safe(() => game.skipToNight());
-  $("btn-eat-hud").onclick = safe(() => game.eat());
-  $("btn-mute").onclick = safe(() => {
+  bindTap("btn-noite", () => game.skipToNight());
+  bindTap("btn-eat-hud", () => game.eat());
+  bindTap("btn-mute", () => {
     audio.unlock();
     const m = audio.toggleMute();
     $("btn-mute").textContent = m ? "Som off" : "Som on";
     $("btn-mute").classList.toggle("muted-icon", m);
   });
   $("btn-mute").textContent = audio.muted ? "Som off" : "Som on";
-  $("btn-ok-tut").onclick = safe(() => {
+  bindTap("btn-ok-tut", () => {
     if (game.uiLock > 0) return;
     game.dismissTutorial();
   });
@@ -127,8 +159,9 @@ export function bindUI(game, audio) {
 
 function setInert(el, on) {
   if (!el) return;
-  if (on) el.setAttribute("inert", "");
-  else el.removeAttribute("inert");
+  const has = el.hasAttribute("inert");
+  if (on && !has) el.setAttribute("inert", "");
+  if (!on && has) el.removeAttribute("inert");
 }
 
 function syncScreens(game) {
