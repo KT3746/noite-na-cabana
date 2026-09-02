@@ -8,7 +8,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.0.0";
+} from "./data.js?v=1.0.1";
 import {
   createWorld,
   T,
@@ -17,8 +17,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.0.0";
-import { STORAGE_KEY } from "./version.js?v=1.0.0";
+} from "./world.js?v=1.0.1";
+import { STORAGE_KEY } from "./version.js?v=1.0.1";
 
 export const MODE = {
   MENU: "menu",
@@ -163,6 +163,12 @@ export class Game {
     }
 
     if (input.pausePressed && this.mode === MODE.PLAY && !this.showTutorial) {
+      if (this.showCraft) {
+        this.showCraft = false;
+        this.audio.ui();
+        input.consumePresses();
+        return;
+      }
       this.mode = MODE.PAUSE;
       this.audio.ui();
       input.consumePresses();
@@ -316,8 +322,8 @@ export class Game {
       const d = dist(p.x, p.y, z.x, z.y);
       if (d > w.alcance + z.r) continue;
       const a = Math.atan2(z.y - p.y, z.x - p.x);
-      let diff = Math.abs(Math.atan2(Math.sin(a - ang), Math.cos(a - ang)));
-      if (diff > 0.95) continue;
+      const diff = Math.abs(Math.atan2(Math.sin(a - ang), Math.cos(a - ang)));
+      if (d > 38 && diff > 1.45) continue;
       this._hurtZombie(z, w.dano, Math.cos(ang) * w.knock, Math.sin(ang) * w.knock);
       hit = true;
     }
@@ -330,7 +336,7 @@ export class Game {
   _tryInteract(dt) {
     const p = this.player;
     if (p.actCd > 0) return;
-    const reach = 46;
+    const reach = 72;
     const tree = nearestNode(this.world.trees, p.x, p.y, (t) => !t.stump, reach);
     if (tree) {
       p.actCd = 0.32;
@@ -563,7 +569,8 @@ export class Game {
     this.phaseMax = NIGHT_BASE + n * 7;
     this.phaseT = this.phaseMax;
     this.wave = 0;
-    this.spawnT = 0.4;
+    this.spawnT = 0;
+    this._spawnWaves(0.05);
     this._banner(`Noite ${n} — defenda a cabana!`);
   }
 

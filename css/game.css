@@ -62,12 +62,7 @@ body {
   z-index: 20;
 }
 
-.overlay.hidden,
-.panel.hidden,
-.hud.hidden,
-.touch.hidden,
-.banner.hidden,
-#toasts.hidden {
+.hidden {
   display: none !important;
 }
 
@@ -328,9 +323,23 @@ button:disabled {
   box-shadow: var(--shadow);
 }
 
-.craft h2 {
-  margin: 0 0 8px;
+.craft-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.craft-head h2 {
+  margin: 0;
   font-size: 18px;
+}
+
+.craft-head button {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
 .recipe {
@@ -446,32 +455,73 @@ button:disabled {
   }
 }
 
+@media (pointer: coarse), (max-width: 900px) {
+  .sidebtns #btn-noite,
+  .sidebtns #btn-eat-hud,
+  .sidebtns #btn-pause {
+    display: none;
+  }
+
+  .sidebtns {
+    top: 78px;
+    bottom: auto;
+    right: max(8px, env(safe-area-inset-right));
+  }
+
+  .hotbar {
+    bottom: calc(24px + 72px + 56px);
+    max-width: calc(100% - 16px);
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
+  .slot {
+    width: 48px;
+    min-height: 48px;
+    font-size: 9px;
+  }
+
+  .craft {
+    top: 72px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    bottom: auto;
+    max-height: calc(100dvh - 300px);
+    z-index: 16;
+  }
+
+  .touch-extra {
+    left: auto;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: calc(18px + 72px + 10px);
+    transform: none;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .touch-extra button {
+    min-width: 72px;
+    height: 48px;
+  }
+
+  #toasts {
+    bottom: 260px;
+    left: 12px;
+    right: 160px;
+  }
+}
+
 @media (max-width: 700px) {
   .chip .bar {
     width: 48px;
   }
-  .hotbar {
-    bottom: 168px;
-  }
-  .slot {
-    width: 48px;
-    min-height: 48px;
-  }
-  .craft {
-    left: 10px;
-    right: 10px;
-    width: auto;
-    top: auto;
-    bottom: 250px;
-  }
-  .sidebtns {
-    top: auto;
-    bottom: 250px;
-    right: 8px;
+  .topbar {
+    flex-wrap: wrap;
   }
   .banner {
     white-space: normal;
     width: min(92%, 420px);
-    top: 22%;
+    top: 18%;
   }
 }

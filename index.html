@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/game.css?v=1.0.0" />
+  <link rel="stylesheet" href="css/game.css?v=1.0.1" />
 </head>
 <body>
   <div id="app">
@@ -43,7 +43,10 @@
     <div id="toasts"></div>
 
     <aside id="craft" class="craft hidden" aria-label="Menu de criação">
-      <h2>Criar itens</h2>
+      <div class="craft-head">
+        <h2>Criar itens</h2>
+        <button type="button" id="btn-craft-close" class="ghost">Fechar</button>
+      </div>
       <p class="tagline">Gaste materiais da clareira. Armas ficam com você; o resto vai para o atalho de baixo.</p>
       <div id="recipes"></div>
     </aside>
@@ -122,8 +125,8 @@
       </div>
     </div>
 
-    <div class="foot" id="ver">v1.0.0</div>
+    <div class="foot" id="ver">v1.0.1</div>
   </div>
-  <script type="module" src="js/main.js?v=1.0.0"></script>
+  <script type="module" src="js/main.js?v=1.0.1"></script>
 </body>
 </html>

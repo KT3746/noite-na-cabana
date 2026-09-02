@@ -1,6 +1,6 @@
-import { TILE, hash2, lerp, WEAPONS } from "./data.js?v=1.0.0";
-import { T } from "./world.js?v=1.0.0";
-import { MODE } from "./game.js?v=1.0.0";
+import { TILE, hash2, lerp, WEAPONS } from "./data.js?v=1.0.1";
+import { T } from "./world.js?v=1.0.1";
+import { MODE } from "./game.js?v=1.0.1";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -50,14 +50,18 @@ export class Renderer {
     this._resources();
     this._buildings();
     this._cabin();
+    ctx.restore();
+
+    this._lighting(sx, sy);
+
+    ctx.save();
+    ctx.translate(-g.cam.x + sx, -g.cam.y + sy);
     this._zombies();
     this._player();
     this._arrows();
     this._particles();
     this._floaters();
     ctx.restore();
-
-    this._lighting(sx, sy);
 
     if (g.flash > 0) {
       ctx.fillStyle = `rgba(180,20,20,${g.flash * 0.35})`;
@@ -308,15 +312,15 @@ export class Renderer {
     ctx.fill();
 
     ctx.fillStyle = "#3e6b6a";
-    ctx.fillRect(-7, -4 + bob, 14, 11);
+    ctx.fillRect(-9, -6 + bob, 18, 14);
     ctx.fillStyle = "#4a3728";
-    ctx.fillRect(-6, 6 + bob, 5, 7);
-    ctx.fillRect(1, 6 + bob, 5, 7);
+    ctx.fillRect(-8, 7 + bob, 6, 8);
+    ctx.fillRect(2, 7 + bob, 6, 8);
     ctx.fillStyle = "#f0c8a0";
-    ctx.fillRect(-5, -13 + bob, 10, 9);
+    ctx.fillRect(-7, -16 + bob, 14, 11);
     ctx.fillStyle = "#6b4423";
-    ctx.fillRect(-7, -17 + bob, 14, 5);
-    ctx.fillRect(-9, -14 + bob, 4, 4);
+    ctx.fillRect(-9, -20 + bob, 18, 6);
+    ctx.fillRect(-11, -16 + bob, 5, 5);
 
     if (p.swinging > 0) {
       const w = WEAPONS[this.game.equipped];
@@ -344,23 +348,36 @@ export class Renderer {
     for (const z of this.game.zombies) {
       const brute = z.kind === "bruto";
       const run = z.kind === "corredor";
-      const bob = Math.sin(z.walk * 2) * 1.2;
+      const bob = Math.sin(z.walk * 2) * 1.4;
+      const w = brute ? 26 : run ? 18 : 20;
+      const h = brute ? 30 : 24;
       ctx.save();
       ctx.translate(z.x, z.y);
-      if (z.hurt > 0) ctx.filter = "brightness(1.6)";
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.beginPath();
-      ctx.ellipse(0, 8, brute ? 11 : 7, 3.2, 0, 0, 7);
-      ctx.fill();
-      ctx.fillStyle = brute ? "#4e5a3a" : run ? "#7d8b5c" : "#6b7a4b";
-      ctx.fillRect(brute ? -10 : -7, -6 + bob, brute ? 20 : 14, brute ? 16 : 12);
-      ctx.fillStyle = "#8ea06a";
-      ctx.fillRect(brute ? -8 : -5, -14 + bob, brute ? 16 : 10, 9);
-      ctx.fillStyle = "#2a331c";
-      ctx.fillRect(brute ? -6 : -3, -16 + bob, brute ? 5 : 3, 3);
-      ctx.fillRect(brute ? 2 : 1, -16 + bob, brute ? 5 : 3, 3);
-      ctx.restore();
       ctx.filter = "none";
+      ctx.fillStyle = "rgba(0,0,0,0.28)";
+      ctx.beginPath();
+      ctx.ellipse(0, 12, w * 0.55, 5, 0, 0, 7);
+      ctx.fill();
+      ctx.fillStyle = "#f8ffe8";
+      ctx.fillRect(-w / 2 - 3, -h / 2 - 4 + bob, w + 6, h + 8);
+      ctx.fillStyle = brute ? "#8fb85a" : run ? "#c6e878" : "#a8d45c";
+      ctx.fillRect(-w / 2, -h / 2 + bob, w, h);
+      ctx.fillStyle = "#d7f29a";
+      ctx.fillRect(-w / 2 + 2, -h / 2 + 2 + bob, w - 4, 10);
+      ctx.fillStyle = "#ffef9a";
+      ctx.fillRect(-5, -h / 2 - 2 + bob, 10, 5);
+      ctx.fillStyle = "#ff3b30";
+      ctx.fillRect(-6, -h / 2 + 5 + bob, 5, 5);
+      ctx.fillRect(2, -h / 2 + 5 + bob, 5, 5);
+      ctx.fillStyle = "#1a1208";
+      ctx.fillRect(-5, -h / 2 + 7 + bob, 2, 2);
+      ctx.fillRect(3, -h / 2 + 7 + bob, 2, 2);
+      if (z.hurt > 0) {
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(-w / 2, -h / 2 + bob, w, h);
+      }
+      ctx.restore();
     }
   }
 
@@ -409,14 +426,15 @@ export class Renderer {
     ctx.clearRect(0, 0, this.light.width, this.light.height);
     const dpr = this.canvas.width / w;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = `rgba(6, 10, 28, ${0.72 * amt})`;
+    ctx.fillStyle = `rgba(6, 10, 28, ${0.58 * amt})`;
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = "destination-out";
     const lights = [];
-    lights.push({ x: g.player.x, y: g.player.y, r: 95, p: 0.75 });
+    lights.push({ x: g.player.x, y: g.player.y, r: 168, p: 0.88 });
     const c = g.world.cabin;
-    lights.push({ x: c.x, y: c.y + 10, r: 130, p: 0.85 });
-    for (const t of g.world.torches) lights.push({ x: t.x, y: t.y, r: 118, p: 0.95 });
+    lights.push({ x: c.x, y: c.y + 10, r: 175, p: 0.9 });
+    for (const t of g.world.torches) lights.push({ x: t.x, y: t.y, r: 140, p: 0.96 });
+    for (const z of g.zombies) lights.push({ x: z.x, y: z.y, r: 52, p: 0.7 });
 
     for (const L of lights) {
       const gx = L.x - g.cam.x + sx;

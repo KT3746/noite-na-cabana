@@ -1,9 +1,9 @@
-import { VERSION } from "./version.js?v=1.0.0";
-import { AudioSys } from "./audio.js?v=1.0.0";
-import { Input } from "./input.js?v=1.0.0";
-import { Game } from "./game.js?v=1.0.0";
-import { Renderer } from "./render.js?v=1.0.0";
-import { bindUI } from "./ui.js?v=1.0.0";
+import { VERSION } from "./version.js?v=1.0.1";
+import { AudioSys } from "./audio.js?v=1.0.1";
+import { Input } from "./input.js?v=1.0.1";
+import { Game } from "./game.js?v=1.0.1";
+import { Renderer } from "./render.js?v=1.0.1";
+import { bindUI } from "./ui.js?v=1.0.1";
 
 const canvas = document.getElementById("game");
 const audio = new AudioSys();
@@ -13,6 +13,7 @@ const renderer = new Renderer(canvas, game);
 const syncUI = bindUI(game, audio);
 
 document.title = `Noite na Cabana v${VERSION}`;
+window.__NNC = { game, audio, VERSION };
 
 let last = performance.now();
 function frame(now) {

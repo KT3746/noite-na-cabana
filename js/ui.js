@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=1.0.0";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.0.0";
-import { MODE, PHASE } from "./game.js?v=1.0.0";
+import { VERSION } from "./version.js?v=1.0.1";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.0.1";
+import { MODE, PHASE } from "./game.js?v=1.0.1";
 
 export function bindUI(game, audio) {
   const $ = (id) => document.getElementById(id);
@@ -40,6 +40,10 @@ export function bindUI(game, audio) {
   };
   $("btn-craft").onclick = () => {
     game.showCraft = !game.showCraft;
+    audio.ui();
+  };
+  $("btn-craft-close").onclick = () => {
+    game.showCraft = false;
     audio.ui();
   };
   $("btn-pause").onclick = () => {
