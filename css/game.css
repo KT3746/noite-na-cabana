@@ -435,6 +435,11 @@ button:disabled {
   z-index: 2;
 }
 
+.stick.is-active {
+  border-color: #f2c14e;
+  background: #00000077;
+}
+
 #stick-knob {
   position: absolute;
   left: 50%;
@@ -523,6 +528,11 @@ button:disabled {
 
   .topbar {
     gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .hud-label {
+    display: none;
   }
 
   .chip {
@@ -592,7 +602,7 @@ button:disabled {
     align-self: stretch;
     margin: 0 6px 6px;
     width: auto;
-    max-height: min(42vh, 340px);
+    max-height: min(32vh, 260px);
     padding: 8px 10px;
     border-radius: 12px;
   }

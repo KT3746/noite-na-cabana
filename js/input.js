@@ -114,6 +114,7 @@ export class Input {
       this._stick.active = true;
       this._stick.x = dx / max;
       this._stick.y = dy / max;
+      stick.classList.add("is-active");
       setKnob(dx, dy);
     };
 
@@ -123,6 +124,7 @@ export class Input {
       this._stick.x = 0;
       this._stick.y = 0;
       this._stick.id = null;
+      stick.classList.remove("is-active");
       setKnob(0, 0);
     };
 
@@ -149,7 +151,6 @@ export class Input {
     stick.addEventListener("pointermove", onMove, { passive: false });
     stick.addEventListener("pointerup", endStick);
     stick.addEventListener("pointercancel", endStick);
-    stick.addEventListener("lostpointercapture", endStick);
 
     window.addEventListener("pointermove", onMove, { passive: false });
     window.addEventListener("pointerup", endStick);

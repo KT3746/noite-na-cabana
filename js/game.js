@@ -581,7 +581,7 @@ export class Game {
     this.phaseT = this.phaseMax;
     this.wave = 0;
     if (n === 1) {
-      this.spawnT = 5.5;
+      this.spawnT = 4.2;
       this._banner("Toque em Atacar quando o zumbi chegar perto");
       this.toast("Fique na porta. Atacar acerta de perto. Coma se a vida baixar.");
     } else {
@@ -632,7 +632,7 @@ export class Game {
     let gap;
     if (night === 1) {
       count = this.wave === 1 ? 2 : 3;
-      gap = 16;
+      gap = 14;
     } else if (night === 2) {
       count = 3 + Math.min(2, this.wave);
       gap = 13;
@@ -690,7 +690,7 @@ export class Game {
       const ang = Math.atan2(ty - z.y, tx - z.x);
       z.facing = ang;
       const night = this.nightsSurvived + 1;
-      const nMul = night === 1 ? 0.72 : night === 2 ? 0.88 : 1;
+      const nMul = night === 1 ? 0.85 : night === 2 ? 0.92 : 1;
       const spd = (z.kind === "corredor" ? 74 : z.kind === "bruto" ? 24 : 32) * nMul * (z.slow ? 0.55 : 1);
       z.slow = Math.max(0, (z.slow || 0) - dt);
       let dx = Math.cos(ang) * spd * dt;
