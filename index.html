@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#0d1410" />
+  <meta name="description" content="Noite na Cabana — cultive de dia, defenda zumbis de noite. Jogo gratuito no navegador." />
+  <title>Noite na Cabana</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect fill='%230d1410' width='64' height='64' rx='10'/%3E%3Cpath fill='%237a2f24' d='M8 30 L32 10 L56 30 Z'/%3E%3Crect fill='%236b4423' x='14' y='28' width='36' height='26'/%3E%3Crect fill='%233d2918' x='28' y='38' width='10' height='16'/%3E%3Crect fill='%23ffe082' x='18' y='34' width='8' height='7'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/game.css?v=1.0.1" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Área do jogo Noite na Cabana"></canvas>
+
+    <div id="hud" class="hud hidden">
+      <div class="topbar">
+        <div class="chip" id="phase-chip">Dia 1 · 75s</div>
+        <div class="chip">Vida <span class="bar hp"><i id="hp-bar"></i></span> <span id="hp-txt">100</span></div>
+        <div class="chip">Cabana <span class="bar cabin"><i id="cabin-bar"></i></span> <span id="cabin-txt">220</span></div>
+      </div>
+      <div class="resbar">
+        <div class="res">Madeira <span id="res-madeira">0</span></div>
+        <div class="res">Pedra <span id="res-pedra">0</span></div>
+        <div class="res">Comida <span id="res-comida">0</span></div>
+        <div class="res">Ferro <span id="res-ferro">0</span></div>
+        <div class="res">Sementes <span id="res-sementes">0</span></div>
+      </div>
+      <div class="sidebtns">
+        <button type="button" id="btn-noite">Enfrentar a noite</button>
+        <button type="button" id="btn-craft" class="ghost">Criar</button>
+        <button type="button" id="btn-eat-hud" class="ghost">Comer</button>
+        <button type="button" id="btn-pause" class="ghost">Pausar</button>
+        <button type="button" id="btn-mute" class="ghost">Som on</button>
+      </div>
+      <div id="hotbar" class="hotbar"></div>
+    </div>
+
+    <div id="banner" class="banner hidden"></div>
+    <div id="toasts"></div>
+
+    <aside id="craft" class="craft hidden" aria-label="Menu de criação">
+      <div class="craft-head">
+        <h2>Criar itens</h2>
+        <button type="button" id="btn-craft-close" class="ghost">Fechar</button>
+      </div>
+      <p class="tagline">Gaste materiais da clareira. Armas ficam com você; o resto vai para o atalho de baixo.</p>
+      <div id="recipes"></div>
+    </aside>
+
+    <div id="touch" class="touch hidden">
+      <div id="stick" class="stick" aria-label="Controle de movimento">
+        <div id="stick-knob"></div>
+      </div>
+      <div class="touch-actions">
+        <button type="button" id="btn-act">Agir</button>
+        <button type="button" id="btn-atk">Atacar</button>
+      </div>
+      <div class="touch-extra">
+        <button type="button" id="btn-eat" class="ghost">Comer</button>
+        <button type="button" id="btn-noite-touch" class="ghost">Noite</button>
+        <button type="button" id="btn-pause-touch" class="ghost">Pausa</button>
+      </div>
+    </div>
+
+    <div id="screen-start" class="overlay">
+      <div class="card">
+        <h1>Noite na Cabana</h1>
+        <p class="tagline">De dia você planta, corta madeira e fortalece a clareira. De noite, ondas de zumbis tentam derrubar a cabana. Sobreviva o máximo de ciclos que puder.</p>
+        <p class="record">Melhor recorde: <span id="best-menu">0</span> noites</p>
+        <div class="row">
+          <button type="button" id="btn-start">Começar</button>
+        </div>
+        <div class="legend">
+          <strong>Como jogar no computador</strong><br />
+          <strong>WASD</strong> ou setas — andar · <strong>mouse</strong> — mirar · clique — agir / construir<br />
+          <strong>Espaço</strong> — atacar · <strong>E</strong> — agir (cortar, minar, plantar) · <strong>Q</strong> ou <strong>F</strong> — comer<br />
+          <strong>C</strong> — criar · <strong>N</strong> — enfrentar a noite · <strong>1–5</strong> — atalhos · <strong>Esc</strong> — pausar<br /><br />
+          <strong>Como jogar no celular</strong><br />
+          Joystick à esquerda para andar. Botões grandes: <strong>Agir</strong>, <strong>Atacar</strong>, <strong>Comer</strong>.
+          Escolha o item na barra e use Agir para plantar, colher ou construir.
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-tut" class="overlay hidden">
+      <div class="card">
+        <h1>Primeiros passos</h1>
+        <div class="legend">
+          1. Ande até uma <strong>árvore</strong> e use <strong>Agir</strong> para cortar madeira.<br />
+          2. Plante <strong>sementes</strong> nas hortas escuras ao lado da cabana e colha comida.<br />
+          3. Pedras dão pedra; veios prateados dão ferro.<br />
+          4. Abra <strong>Criar</strong> e faça cercas, tochas, armadilhas e armas.<br />
+          5. Quando estiver pronto, toque em <strong>Enfrentar a noite</strong> — se a cabana cair, o jogo acaba.
+        </div>
+        <button type="button" id="btn-ok-tut">Entendi</button>
+      </div>
+    </div>
+
+    <div id="screen-pause" class="overlay hidden">
+      <div class="card">
+        <h1>Pausado</h1>
+        <p class="tagline">A clareira espera. Respire fundo — a noite também espera.</p>
+        <div class="row">
+          <button type="button" id="btn-resume">Continuar</button>
+          <button type="button" id="btn-restart" class="ghost">Recomeçar</button>
+          <button type="button" id="btn-menu" class="ghost">Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-over" class="overlay hidden">
+      <div class="card">
+        <h1>Fim da jornada</h1>
+        <p class="tagline" id="over-reason">A cabana não aguentou.</p>
+        <p class="record">Noites sobrevivídas: <span id="over-nights">0</span></p>
+        <p class="tagline">Melhor recorde: <span id="over-best">0</span> · Zumbis derrotados: <span id="over-kills">0</span></p>
+        <div class="row">
+          <button type="button" id="btn-restart-over">Jogar de novo</button>
+          <button type="button" id="btn-menu-over" class="ghost">Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot" id="ver">v1.0.1</div>
+  </div>
+  <script type="module" src="js/main.js?v=1.0.1"></script>
+</body>
+</html>
