@@ -8,7 +8,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.0.1";
+} from "./data.js?v=1.0.2";
 import {
   createWorld,
   T,
@@ -17,8 +17,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.0.1";
-import { STORAGE_KEY } from "./version.js?v=1.0.1";
+} from "./world.js?v=1.0.2";
+import { STORAGE_KEY } from "./version.js?v=1.0.2";
 
 export const MODE = {
   MENU: "menu",
@@ -55,7 +55,6 @@ export class Game {
     this.cam = { x: 0, y: 0 };
     this.viewW = 800;
     this.viewH = 450;
-    this.nightLight = 0;
     this.resetRun();
   }
 
@@ -68,8 +67,8 @@ export class Game {
       vx: 0,
       vy: 0,
       r: 10,
-      hp: 100,
-      maxHp: 100,
+      hp: 140,
+      maxHp: 140,
       facing: 0,
       walk: 0,
       atkCd: 0,
@@ -101,6 +100,16 @@ export class Game {
     this.spawnT = 0;
     this.transT = 0;
     this.kills = 0;
+    this.nightLight = 0;
+    this.particles = [];
+    this.floaters = [];
+    this.toasts = [];
+    this.banner = "";
+    this.bannerT = 0;
+    this.shake = 0;
+    this.flash = 0;
+    this.showCraft = false;
+    if (this.audio) this.audio.setNight(false);
   }
 
   start() {
@@ -108,6 +117,8 @@ export class Game {
     this.mode = MODE.PLAY;
     this.showCraft = false;
     this.showTutorial = !this.seenTutorial;
+    this.nightLight = 0;
+    this.phase = PHASE.DAY;
     this._banner("O dia começa — colete, plante e fortaleça.");
     this.audio.setNight(false);
   }
@@ -258,7 +269,7 @@ export class Game {
       p.walk *= 0.9;
     }
 
-    if (input.hasPointer) {
+    if (input.hasPointer && !input.touchEnabled && !input._stick.active) {
       p.aim = Math.atan2(input.worldY - p.y, input.worldX - p.x);
     } else {
       p.aim = p.facing;
@@ -320,10 +331,10 @@ export class Game {
     for (const z of this.zombies) {
       if (z.hp <= 0) continue;
       const d = dist(p.x, p.y, z.x, z.y);
-      if (d > w.alcance + z.r) continue;
+      if (d > w.alcance + z.r + 22) continue;
       const a = Math.atan2(z.y - p.y, z.x - p.x);
       const diff = Math.abs(Math.atan2(Math.sin(a - ang), Math.cos(a - ang)));
-      if (d > 38 && diff > 1.45) continue;
+      if (d > 62 && diff > 1.95) continue;
       this._hurtZombie(z, w.dano, Math.cos(ang) * w.knock, Math.sin(ang) * w.knock);
       hit = true;
     }
@@ -497,9 +508,9 @@ export class Game {
       return;
     }
     this.inv.comida -= 1;
-    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 28);
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 36);
     this.audio.eat();
-    this.floater(this.player.x, this.player.y - 16, "+28 vida", "#e07a5f");
+    this.floater(this.player.x, this.player.y - 16, "+36 vida", "#e07a5f");
   }
 
   craft(id) {
@@ -566,12 +577,18 @@ export class Game {
   _beginNight() {
     this.phase = PHASE.NIGHT;
     const n = this.nightsSurvived + 1;
-    this.phaseMax = NIGHT_BASE + n * 7;
+    this.phaseMax = n === 1 ? 44 : NIGHT_BASE + n * 7;
     this.phaseT = this.phaseMax;
     this.wave = 0;
-    this.spawnT = 0;
-    this._spawnWaves(0.05);
-    this._banner(`Noite ${n} — defenda a cabana!`);
+    if (n === 1) {
+      this.spawnT = 5.5;
+      this._banner("Toque em Atacar quando o zumbi chegar perto");
+      this.toast("Fique na porta. Atacar acerta de perto. Coma se a vida baixar.");
+    } else {
+      this.spawnT = 0;
+      this._spawnWaves(0.05);
+      this._banner(`Noite ${n} — defenda a cabana!`);
+    }
   }
 
   _beginDawn() {
@@ -592,6 +609,7 @@ export class Game {
     this.phaseMax = DAY_LEN;
     this.phaseT = DAY_LEN;
     this.zombies = [];
+    this.nightLight = 0;
     respawnMorning(this.world);
     this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
     this.toast("Um novo dia. Recursos voltaram a crescer.");
@@ -608,13 +626,23 @@ export class Game {
   _spawnWaves(dt) {
     this.spawnT -= dt;
     const night = this.nightsSurvived + 1;
-    if (this.spawnT <= 0) {
-      this.wave += 1;
-      const count = 3 + night + Math.min(4, this.wave);
-      for (let i = 0; i < count; i++) this._spawnZombie(night);
-      this.spawnT = 11.5;
-      if (this.wave === 1) this.toast("Uma onda se aproxima…");
+    if (this.spawnT > 0) return;
+    this.wave += 1;
+    let count;
+    let gap;
+    if (night === 1) {
+      count = this.wave === 1 ? 2 : 3;
+      gap = 16;
+    } else if (night === 2) {
+      count = 3 + Math.min(2, this.wave);
+      gap = 13;
+    } else {
+      count = 3 + night + Math.min(4, this.wave);
+      gap = 11.5;
     }
+    for (let i = 0; i < count; i++) this._spawnZombie(night);
+    this.spawnT = gap;
+    if (this.wave === 1) this.toast("Uma onda se aproxima…");
   }
 
   _spawnZombie(night) {
@@ -638,7 +666,7 @@ export class Game {
       hpMul,
     });
     const z = this.zombies[this.zombies.length - 1];
-    z.hp = (kind === "bruto" ? 90 : kind === "corredor" ? 20 : 30) * hpMul;
+    z.hp = (kind === "bruto" ? 90 : kind === "corredor" ? 20 : 28) * hpMul;
     z.max = z.hp;
     if (this.zombies.length === 1 || Math.random() < 0.12) this.audio.groan();
   }
@@ -661,7 +689,9 @@ export class Game {
       const ty = preferCabin && toP > 70 ? cabin.doorY : toP < 88 ? p.y : cabin.doorY;
       const ang = Math.atan2(ty - z.y, tx - z.x);
       z.facing = ang;
-      const spd = (z.kind === "corredor" ? 74 : z.kind === "bruto" ? 24 : 36) * (z.slow ? 0.55 : 1);
+      const night = this.nightsSurvived + 1;
+      const nMul = night === 1 ? 0.72 : night === 2 ? 0.88 : 1;
+      const spd = (z.kind === "corredor" ? 74 : z.kind === "bruto" ? 24 : 32) * nMul * (z.slow ? 0.55 : 1);
       z.slow = Math.max(0, (z.slow || 0) - dt);
       let dx = Math.cos(ang) * spd * dt;
       let dy = Math.sin(ang) * spd * dt;
@@ -676,12 +706,14 @@ export class Game {
 
       if (toP < rad + p.r + 6 && z.atk <= 0) {
         z.atk = 0.85;
-        const dmg = z.kind === "bruto" ? 18 : z.kind === "corredor" ? 7 : 9;
+        const dmgMul = night === 1 ? 0.62 : 1;
+        const dmg = (z.kind === "bruto" ? 18 : z.kind === "corredor" ? 7 : 8) * dmgMul;
         this._hurtPlayer(dmg);
       }
       if (toC < 38 && z.atk <= 0) {
         z.atk = 1.05;
-        const dmg = z.kind === "bruto" ? 12 : z.kind === "corredor" ? 4 : 5;
+        const dmgMul = night === 1 ? 0.55 : 1;
+        const dmg = (z.kind === "bruto" ? 12 : z.kind === "corredor" ? 4 : 5) * dmgMul;
         this._hurtCabin(dmg);
       }
 
@@ -713,7 +745,7 @@ export class Game {
       }
       for (const z of this.zombies) {
         const r = z.kind === "bruto" ? 15 : 11;
-        if (dist(a.x, a.y, z.x, z.y) < r + 4) {
+        if (dist(a.x, a.y, z.x, z.y) < r + 14) {
           this._hurtZombie(z, a.dmg, a.vx * 0.15, a.vy * 0.15);
           a.life = 0;
           this.audio.hit();

@@ -1,4 +1,4 @@
-import { TILE, hash2, irand, rand } from "./data.js?v=1.0.1";
+import { TILE, hash2, irand, rand } from "./data.js?v=1.0.2";
 
 export const T = {
   GRASS: 0,
@@ -146,8 +146,8 @@ export function createWorld() {
       y: (cy + 2.5) * TILE,
       doorX,
       doorY,
-      hp: 220,
-      maxHp: 220,
+      hp: 340,
+      maxHp: 340,
     },
     at(x, y) {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return T.WATER;

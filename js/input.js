@@ -89,53 +89,94 @@ export class Input {
     const knob = document.getElementById("stick-knob");
     if (!stick) return;
 
+    const setKnob = (dx, dy) => {
+      if (!knob) return;
+      const r = stick.getBoundingClientRect();
+      const x = r.width / 2 + dx;
+      const y = r.height / 2 + dy;
+      knob.style.left = `${x}px`;
+      knob.style.top = `${y}px`;
+      knob.style.transform = "translate(-50%, -50%)";
+    };
+
     const setFrom = (clientX, clientY) => {
       const r = stick.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
       let dx = clientX - cx;
       let dy = clientY - cy;
-      const max = r.width * 0.38;
+      const max = Math.max(18, r.width * 0.42);
       const len = Math.hypot(dx, dy) || 1;
       if (len > max) {
         dx = (dx / len) * max;
         dy = (dy / len) * max;
       }
+      this._stick.active = true;
       this._stick.x = dx / max;
       this._stick.y = dy / max;
-      if (knob) {
-        knob.style.transform = `translate(${dx}px, ${dy}px)`;
-      }
+      setKnob(dx, dy);
     };
 
-    const endStick = () => {
+    const endStick = (e) => {
+      if (this._stick.id != null && e && e.pointerId !== this._stick.id) return;
       this._stick.active = false;
       this._stick.x = 0;
       this._stick.y = 0;
       this._stick.id = null;
-      if (knob) knob.style.transform = "translate(0,0)";
+      setKnob(0, 0);
+    };
+
+    const onMove = (e) => {
+      if (!this._stick.active) return;
+      if (this._stick.id != null && e.pointerId !== this._stick.id) return;
+      if (e.cancelable) e.preventDefault();
+      setFrom(e.clientX, e.clientY);
     };
 
     stick.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      stick.setPointerCapture(e.pointerId);
-      this._stick.active = true;
-      this._stick.id = e.pointerId;
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
       this.touchEnabled = true;
+      this._stick.id = e.pointerId;
+      try {
+        stick.setPointerCapture(e.pointerId);
+      } catch (_) {
+        /* alguns navegadores mobile não expõem capture */
+      }
       setFrom(e.clientX, e.clientY);
-    });
-    stick.addEventListener("pointermove", (e) => {
-      if (!this._stick.active || e.pointerId !== this._stick.id) return;
-      setFrom(e.clientX, e.clientY);
-    });
+    }, { passive: false });
+
+    stick.addEventListener("pointermove", onMove, { passive: false });
     stick.addEventListener("pointerup", endStick);
     stick.addEventListener("pointercancel", endStick);
+    stick.addEventListener("lostpointercapture", endStick);
+
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", endStick);
+    window.addEventListener("pointercancel", endStick);
+
+    const onTouchMove = (e) => {
+      if (!this._stick.active || !e.touches || !e.touches.length) return;
+      if (e.cancelable) e.preventDefault();
+      const t = e.touches[0];
+      setFrom(t.clientX, t.clientY);
+    };
+    stick.addEventListener("touchstart", (e) => {
+      if (e.cancelable) e.preventDefault();
+      const t = e.changedTouches[0];
+      this.touchEnabled = true;
+      this._stick.id = t.identifier;
+      setFrom(t.clientX, t.clientY);
+    }, { passive: false });
+    stick.addEventListener("touchmove", onTouchMove, { passive: false });
+    stick.addEventListener("touchend", () => endStick());
+    stick.addEventListener("touchcancel", () => endStick());
 
     const hold = (id, propHeld, propPress) => {
       const el = document.getElementById(id);
       if (!el) return;
       const start = (e) => {
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         this.touchEnabled = true;
         this[propHeld] = true;
         if (propPress) this[propPress] = true;
@@ -147,7 +188,7 @@ export class Input {
         if (id === "btn-atk") this._atkBtn = false;
         if (id === "btn-act") this._actBtn = false;
       };
-      el.addEventListener("pointerdown", start);
+      el.addEventListener("pointerdown", start, { passive: false });
       el.addEventListener("pointerup", end);
       el.addEventListener("pointercancel", end);
       el.addEventListener("pointerleave", end);
@@ -159,10 +200,10 @@ export class Input {
       const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         this.touchEnabled = true;
         this[prop] = true;
-      });
+      }, { passive: false });
     };
     tap("btn-eat", "eatPressed");
     tap("btn-pause-touch", "pausePressed");
