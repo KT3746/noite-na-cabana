@@ -1,10 +1,10 @@
-import { VERSION } from "./version.js?v=1.0.4";
-import { AudioSys } from "./audio.js?v=1.0.4";
-import { Input } from "./input.js?v=1.0.4";
-import { Game } from "./game.js?v=1.0.4";
-import { Renderer } from "./render.js?v=1.0.4";
-import { bindUI } from "./ui.js?v=1.0.4";
-import { bindViewport } from "./viewport.js?v=1.0.4";
+import { VERSION } from "./version.js?v=1.0.5";
+import { AudioSys } from "./audio.js?v=1.0.5";
+import { Input } from "./input.js?v=1.0.5";
+import { Game } from "./game.js?v=1.0.5";
+import { Renderer } from "./render.js?v=1.0.5";
+import { bindUI } from "./ui.js?v=1.0.5";
+import { bindViewport } from "./viewport.js?v=1.0.5";
 
 const app = document.getElementById("app");
 const canvas = document.getElementById("game");
