@@ -1,10 +1,10 @@
-import { VERSION } from "./version.js?v=1.0.5";
-import { AudioSys } from "./audio.js?v=1.0.5";
-import { Input } from "./input.js?v=1.0.5";
-import { Game } from "./game.js?v=1.0.5";
-import { Renderer } from "./render.js?v=1.0.5";
-import { bindUI } from "./ui.js?v=1.0.5";
-import { bindViewport } from "./viewport.js?v=1.0.5";
+import { VERSION } from "./version.js?v=1.0.6";
+import { AudioSys } from "./audio.js?v=1.0.6";
+import { Input } from "./input.js?v=1.0.6";
+import { Game } from "./game.js?v=1.0.6";
+import { Renderer } from "./render.js?v=1.0.6";
+import { bindUI } from "./ui.js?v=1.0.6";
+import { bindViewport } from "./viewport.js?v=1.0.6";
 
 const app = document.getElementById("app");
 const canvas = document.getElementById("game");
@@ -16,7 +16,7 @@ bindViewport(app, () => { if (renderer) renderer.resize(); });
 renderer = new Renderer(canvas, game);
 const syncUI = bindUI(game, audio);
 
-document.title = `Noite na Cabana v${VERSION}`;
+document.title = `CABANA DE GUERRA v${VERSION}`;
 window.__NNC = { game, audio, input, VERSION, sync: syncUI };
 
 let last = performance.now();
