@@ -2,7 +2,7 @@
 
 Jogo de navegador (PC e celular): de **dia** você cultiva, coleta e fortalece uma cabana; de **noite** ondas de zumbis atacam e você precisa defender.
 
-**Jogue agora:** [https://kt3746.github.io/Grok-Cabana-de-Guerra/](https://kt3746.github.io/Grok-Cabana-de-Guerra/)
+**Jogue agora:** [https://kt3746.github.io/grokbot-cabana-de-guerra/](https://kt3746.github.io/grokbot-cabana-de-guerra/)
 
 Versão atual: **1.0.6** (aparece no rodapé da tela).
 
