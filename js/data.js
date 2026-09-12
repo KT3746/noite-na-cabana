@@ -38,7 +38,7 @@ export const WEAPONS = {
     dano: 18,
     alcance: 510,
     cooldown: 0.46,
-    projSpeed: 360,
+    projSpeed: 540,
   },
   lanca: {
     id: "lanca",

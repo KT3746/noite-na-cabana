@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.0.7";
+} from "./data.js?v=1.0.8";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.0.7";
-import { STORAGE_KEY } from "./version.js?v=1.0.7";
+} from "./world.js?v=1.0.8";
+import { STORAGE_KEY } from "./version.js?v=1.0.8";
 
 export const MODE = {
   MENU: "menu",
@@ -375,7 +375,7 @@ export class Game {
       const y = (ty + 0.5) * TILE;
       const t = this.world.at(tx, ty);
       if (t !== T.GRASS && t !== T.DIRT) continue;
-      if (circleHitsSolid(this.world, x, y, 10, { forZombie: false })) continue;
+      if (circleHitsSolid(this.world, x, y, 10 * SCALE, { forZombie: false })) continue;
       const occupied =
         this.world.fences.some((f) => f.tx === tx && f.ty === ty && f.hp > 0) ||
         this.world.torches.some((o) => o.tx === tx && o.ty === ty) ||
@@ -403,8 +403,8 @@ export class Game {
     if (w.tipo === "ranged") {
       this.audio.shoot();
       this.arrows.push({
-        x: p.x + Math.cos(ang) * 14,
-        y: p.y + Math.sin(ang) * 14,
+        x: p.x + Math.cos(ang) * 14 * SCALE,
+        y: p.y + Math.sin(ang) * 14 * SCALE,
         vx: Math.cos(ang) * w.projSpeed,
         vy: Math.sin(ang) * w.projSpeed,
         life: 1.1,
@@ -422,7 +422,7 @@ export class Game {
       if (!Number.isFinite(d) || d > w.alcance + (z.r || 12 * SCALE) + 22 * SCALE) continue;
       const a = Math.atan2(z.y - p.y, z.x - p.x);
       const diff = Math.abs(Math.atan2(Math.sin(a - ang), Math.cos(a - ang)));
-      if (d > 62 && diff > 1.95) continue;
+      if (d > 62 * SCALE && diff > 1.95) continue;
       this._hurtZombie(z, w.dano, Math.cos(ang) * w.knock, Math.sin(ang) * w.knock, "attack");
       hit = true;
     }
@@ -435,7 +435,7 @@ export class Game {
   _tryInteract(dt) {
     const p = this.player;
     if (p.actCd > 0) return;
-    const reach = 72;
+    const reach = 72 * SCALE;
     const tree = nearestNode(this.world.trees, p.x, p.y, (t) => !t.stump, reach);
     if (tree) {
       p.actCd = 0.32;
@@ -799,7 +799,7 @@ export class Game {
 
       for (const f of this.world.fences) {
         if (f.hp <= 0) continue;
-        if (dist(z.x, z.y, f.x, f.y) < rad + 16 && z.atk <= 0) {
+        if (dist(z.x, z.y, f.x, f.y) < rad + 16 * SCALE && z.atk <= 0) {
           z.atk = 0.7;
           f.hp -= z.kind === "bruto" ? 14 : 8;
           this.burst(f.x, f.y, 4, "#8d6e43", 40);
@@ -826,7 +826,7 @@ export class Game {
       for (const z of this.zombies) {
         if (z.hp <= 0) continue;
         const r = (z.kind === "bruto" ? 15 : 11) * SCALE;
-        if (dist(a.x, a.y, z.x, z.y) < r + 14) {
+        if (dist(a.x, a.y, z.x, z.y) < r + 14 * SCALE) {
           this._hurtZombie(z, a.dmg, a.vx * 0.15, a.vy * 0.15);
           a.life = 0;
           this.audio.hit();
@@ -843,7 +843,7 @@ export class Game {
       if (t.uses <= 0 || t.cd > 0) continue;
       for (const z of this.zombies) {
         if (z.hp <= 0) continue;
-        if (dist(z.x, z.y, t.x, t.y) < 18) {
+        if (dist(z.x, z.y, t.x, t.y) < 18 * SCALE) {
           t.cd = 0.8;
           t.uses -= 1;
           this._hurtZombie(z, 24, 0, 0);
