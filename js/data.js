@@ -1,4 +1,6 @@
-export const TILE = 32;
+export const TILE = 48;
+/** Escala visual/física em relação ao tile original (32). */
+export const SCALE = TILE / 32;
 
 export const COL = {
   wood: "#c4a574",
@@ -25,7 +27,7 @@ export const WEAPONS = {
     nome: "Estaca tosca",
     tipo: "melee",
     dano: 22,
-    alcance: 98,
+    alcance: 147,
     cooldown: 0.36,
     knock: 110,
   },
@@ -34,7 +36,7 @@ export const WEAPONS = {
     nome: "Arco de galho",
     tipo: "ranged",
     dano: 18,
-    alcance: 340,
+    alcance: 510,
     cooldown: 0.46,
     projSpeed: 360,
   },
@@ -43,7 +45,7 @@ export const WEAPONS = {
     nome: "Lança de ferro",
     tipo: "melee",
     dano: 34,
-    alcance: 118,
+    alcance: 177,
     cooldown: 0.42,
     knock: 140,
   },
@@ -117,7 +119,7 @@ export const ZOMBIE_KINDS = {
   andarilho: {
     nome: "Andarilho",
     hp: 28,
-    speed: 32,
+    speed: 48,
     dmg: 8,
     cabinDmg: 6,
     r: 12,
@@ -127,7 +129,7 @@ export const ZOMBIE_KINDS = {
   corredor: {
     nome: "Corredor",
     hp: 20,
-    speed: 74,
+    speed: 111,
     dmg: 7,
     cabinDmg: 5,
     r: 10,
@@ -137,7 +139,7 @@ export const ZOMBIE_KINDS = {
   bruto: {
     nome: "Bruto",
     hp: 90,
-    speed: 24,
+    speed: 36,
     dmg: 18,
     cabinDmg: 16,
     r: 15,

@@ -1,6 +1,6 @@
-import { TILE, hash2, lerp, WEAPONS } from "./data.js?v=1.0.6";
-import { T } from "./world.js?v=1.0.6";
-import { MODE } from "./game.js?v=1.0.6";
+import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=1.0.7";
+import { T } from "./world.js?v=1.0.7";
+import { MODE } from "./game.js?v=1.0.7";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -19,7 +19,7 @@ export class Renderer {
   }
 
   resize() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
     const app = document.getElementById("app");
     const w = (app && app.clientWidth) || this.canvas.clientWidth || window.innerWidth;
     const h = (app && app.clientHeight) || this.canvas.clientHeight || window.innerHeight;
@@ -162,53 +162,53 @@ export class Renderer {
       if (t.stump) {
         ctx.fillStyle = "#5c4030";
         ctx.beginPath();
-        ctx.ellipse(t.x, t.y + 4, 8, 5, 0, 0, 7);
+        ctx.ellipse(t.x, t.y + 4 * SCALE, 8 * SCALE, 5 * SCALE, 0, 0, 7);
         ctx.fill();
         continue;
       }
       ctx.fillStyle = "rgba(0,0,0,0.18)";
       ctx.beginPath();
-      ctx.ellipse(t.x, t.y + 10, 12, 5, 0, 0, 7);
+      ctx.ellipse(t.x, t.y + 10 * SCALE, 12 * SCALE, 5 * SCALE, 0, 0, 7);
       ctx.fill();
       ctx.fillStyle = "#6b4423";
-      ctx.fillRect(t.x - 4, t.y - 4, 8, 14);
+      ctx.fillRect(t.x - 4 * SCALE, t.y - 4 * SCALE, 8 * SCALE, 14 * SCALE);
       ctx.fillStyle = "#2f6b32";
-      blob(ctx, t.x, t.y - 14, 16);
+      blob(ctx, t.x, t.y - 14 * SCALE, 16 * SCALE);
       ctx.fillStyle = "#3d8b40";
-      blob(ctx, t.x - 6, t.y - 10, 11);
+      blob(ctx, t.x - 6 * SCALE, t.y - 10 * SCALE, 11 * SCALE);
       ctx.fillStyle = "#6bb36a";
-      blob(ctx, t.x + 5, t.y - 16, 8);
+      blob(ctx, t.x + 5 * SCALE, t.y - 16 * SCALE, 8 * SCALE);
     }
     for (const r of this.game.world.rocks) {
       if (r.gone) continue;
       ctx.fillStyle = "rgba(0,0,0,0.16)";
       ctx.beginPath();
-      ctx.ellipse(r.x, r.y + 6, 11, 5, 0, 0, 7);
+      ctx.ellipse(r.x, r.y + 6 * SCALE, 11 * SCALE, 5 * SCALE, 0, 0, 7);
       ctx.fill();
       ctx.fillStyle = "#8d97a1";
       ctx.beginPath();
-      ctx.moveTo(r.x - 12, r.y + 6);
-      ctx.lineTo(r.x - 6, r.y - 8);
-      ctx.lineTo(r.x + 8, r.y - 6);
-      ctx.lineTo(r.x + 12, r.y + 6);
+      ctx.moveTo(r.x - 12 * SCALE, r.y + 6 * SCALE);
+      ctx.lineTo(r.x - 6 * SCALE, r.y - 8 * SCALE);
+      ctx.lineTo(r.x + 8 * SCALE, r.y - 6 * SCALE);
+      ctx.lineTo(r.x + 12 * SCALE, r.y + 6 * SCALE);
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = "#b0b8c0";
-      ctx.fillRect(r.x - 2, r.y - 4, 6, 4);
+      ctx.fillRect(r.x - 2 * SCALE, r.y - 4 * SCALE, 6 * SCALE, 4 * SCALE);
     }
     for (const v of this.game.world.veins) {
       if (v.gone) continue;
       ctx.fillStyle = "#5d6670";
       ctx.beginPath();
-      ctx.moveTo(v.x - 13, v.y + 7);
-      ctx.lineTo(v.x - 4, v.y - 10);
-      ctx.lineTo(v.x + 10, v.y - 7);
-      ctx.lineTo(v.x + 13, v.y + 7);
+      ctx.moveTo(v.x - 13 * SCALE, v.y + 7 * SCALE);
+      ctx.lineTo(v.x - 4 * SCALE, v.y - 10 * SCALE);
+      ctx.lineTo(v.x + 10 * SCALE, v.y - 7 * SCALE);
+      ctx.lineTo(v.x + 13 * SCALE, v.y + 7 * SCALE);
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = "#c5d0d8";
-      ctx.fillRect(v.x - 3, v.y - 2, 5, 5);
-      ctx.fillRect(v.x + 3, v.y + 1, 4, 4);
+      ctx.fillRect(v.x - 3 * SCALE, v.y - 2 * SCALE, 5 * SCALE, 5 * SCALE);
+      ctx.fillRect(v.x + 3 * SCALE, v.y + 1 * SCALE, 4 * SCALE, 4 * SCALE);
     }
   }
 
@@ -216,31 +216,31 @@ export class Renderer {
     const ctx = this.ctx;
     for (const f of this.game.world.fences) {
       ctx.fillStyle = "#6b4423";
-      ctx.fillRect(f.x - 12, f.y - 8, 6, 18);
-      ctx.fillRect(f.x + 6, f.y - 8, 6, 18);
-      ctx.fillRect(f.x - 14, f.y - 4, 28, 5);
-      ctx.fillRect(f.x - 14, f.y + 4, 28, 5);
+      ctx.fillRect(f.x - 12 * SCALE, f.y - 8 * SCALE, 6 * SCALE, 18 * SCALE);
+      ctx.fillRect(f.x + 6 * SCALE, f.y - 8 * SCALE, 6 * SCALE, 18 * SCALE);
+      ctx.fillRect(f.x - 14 * SCALE, f.y - 4 * SCALE, 28 * SCALE, 5 * SCALE);
+      ctx.fillRect(f.x - 14 * SCALE, f.y + 4 * SCALE, 28 * SCALE, 5 * SCALE);
       if (f.hp < f.max * 0.4) {
         ctx.fillStyle = "#3a2414";
-        ctx.fillRect(f.x - 2, f.y - 6, 3, 14);
+        ctx.fillRect(f.x - 2 * SCALE, f.y - 6 * SCALE, 3 * SCALE, 14 * SCALE);
       }
     }
     for (const t of this.game.world.torches) {
       ctx.fillStyle = "#5c4030";
-      ctx.fillRect(t.x - 2, t.y - 4, 4, 14);
+      ctx.fillRect(t.x - 2 * SCALE, t.y - 4 * SCALE, 4 * SCALE, 14 * SCALE);
       const flick = 0.7 + Math.sin(this.t * 12 + t.x) * 0.3;
       ctx.fillStyle = `rgba(255,160,40,${0.35 * flick})`;
       ctx.beginPath();
-      ctx.arc(t.x, t.y - 8, 10, 0, 7);
+      ctx.arc(t.x, t.y - 8 * SCALE, 10 * SCALE, 0, 7);
       ctx.fill();
       ctx.fillStyle = "#ffcc66";
       ctx.beginPath();
-      ctx.arc(t.x, t.y - 8, 4, 0, 7);
+      ctx.arc(t.x, t.y - 8 * SCALE, 4 * SCALE, 0, 7);
       ctx.fill();
     }
     for (const t of this.game.world.traps) {
       ctx.fillStyle = "#4a3324";
-      ctx.fillRect(t.x - 12, t.y - 8, 24, 16);
+      ctx.fillRect(t.x - 12 * SCALE, t.y - 8 * SCALE, 24 * SCALE, 16 * SCALE);
       ctx.fillStyle = "#c4a574";
       ctx.beginPath();
       ctx.moveTo(t.x - 8, t.y + 6);
@@ -260,62 +260,64 @@ export class Renderer {
     const ctx = this.ctx;
     const x = c.tx * TILE;
     const y = c.ty * TILE;
+    const s = SCALE;
     const night = this.game.nightLight;
 
     ctx.fillStyle = "rgba(0,0,0,0.22)";
     ctx.beginPath();
-    ctx.ellipse(x + 80, y + 168, 70, 16, 0, 0, 7);
+    ctx.ellipse(x + 80 * s, y + 168 * s, 70 * s, 16 * s, 0, 0, 7);
     ctx.fill();
 
     ctx.fillStyle = "#6b4423";
-    ctx.fillRect(x, y + 24, 160, 136);
+    ctx.fillRect(x, y + 24 * s, 160 * s, 136 * s);
     ctx.fillStyle = "#5a3820";
-    ctx.fillRect(x + 6, y + 30, 148, 124);
+    ctx.fillRect(x + 6 * s, y + 30 * s, 148 * s, 124 * s);
 
     ctx.fillStyle = "#7a2f24";
     ctx.beginPath();
-    ctx.moveTo(x - 10, y + 36);
-    ctx.lineTo(x + 80, y - 18);
-    ctx.lineTo(x + 170, y + 36);
+    ctx.moveTo(x - 10 * s, y + 36 * s);
+    ctx.lineTo(x + 80 * s, y - 18 * s);
+    ctx.lineTo(x + 170 * s, y + 36 * s);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = "#8d3b2e";
     ctx.beginPath();
-    ctx.moveTo(x + 8, y + 32);
-    ctx.lineTo(x + 80, y - 8);
-    ctx.lineTo(x + 152, y + 32);
+    ctx.moveTo(x + 8 * s, y + 32 * s);
+    ctx.lineTo(x + 80 * s, y - 8 * s);
+    ctx.lineTo(x + 152 * s, y + 32 * s);
     ctx.closePath();
     ctx.fill();
 
     ctx.fillStyle = "#4a3324";
-    ctx.fillRect(x + 118, y - 8, 16, 28);
+    ctx.fillRect(x + 118 * s, y - 8 * s, 16 * s, 28 * s);
 
     const door = "#3d2918";
     ctx.fillStyle = door;
-    ctx.fillRect(x + 64, y + 108, 32, 52);
+    ctx.fillRect(x + 64 * s, y + 108 * s, 32 * s, 52 * s);
     ctx.fillStyle = "#c4a574";
-    ctx.fillRect(x + 88, y + 132, 4, 4);
+    ctx.fillRect(x + 88 * s, y + 132 * s, 4 * s, 4 * s);
 
     ctx.fillStyle = lerpColor("#5d4037", "#ffe082", night * 0.9);
-    ctx.fillRect(x + 22, y + 56, 26, 22);
-    ctx.fillRect(x + 112, y + 56, 26, 22);
+    ctx.fillRect(x + 22 * s, y + 56 * s, 26 * s, 22 * s);
+    ctx.fillRect(x + 112 * s, y + 56 * s, 26 * s, 22 * s);
     ctx.strokeStyle = "#3d2918";
-    ctx.strokeRect(x + 22, y + 56, 26, 22);
-    ctx.strokeRect(x + 112, y + 56, 26, 22);
+    ctx.strokeRect(x + 22 * s, y + 56 * s, 26 * s, 22 * s);
+    ctx.strokeRect(x + 112 * s, y + 56 * s, 26 * s, 22 * s);
 
     const ratio = clamp01(c.hp / c.maxHp);
     ctx.fillStyle = "#00000066";
-    ctx.fillRect(x + 20, y + 8, 120, 7);
+    ctx.fillRect(x + 20 * s, y + 8 * s, 120 * s, 7 * s);
     ctx.fillStyle = ratio > 0.35 ? "#f2cc8f" : "#e85d4c";
-    ctx.fillRect(x + 20, y + 8, 120 * ratio, 7);
+    ctx.fillRect(x + 20 * s, y + 8 * s, 120 * s * ratio, 7 * s);
   }
 
   _player() {
     const p = this.game.player;
     const ctx = this.ctx;
-    const bob = Math.sin(p.walk * 2) * 1.5;
+    const bob = Math.sin(p.walk * 2) * 1.5 * SCALE;
     ctx.save();
     ctx.translate(p.x, p.y);
+    ctx.scale(SCALE, SCALE);
     if (p.hurt > 0) ctx.globalAlpha = 0.55 + Math.sin(this.t * 40) * 0.2;
 
     ctx.fillStyle = "rgba(0,0,0,0.22)";
@@ -360,9 +362,9 @@ export class Renderer {
     for (const z of this.game.zombies) {
       const brute = z.kind === "bruto";
       const run = z.kind === "corredor";
-      const bob = Math.sin(z.walk * 2) * 1.4;
-      const w = brute ? 26 : run ? 18 : 20;
-      const h = brute ? 30 : 24;
+      const bob = Math.sin(z.walk * 2) * 1.4 * SCALE;
+      const w = (brute ? 26 : run ? 18 : 20) * SCALE;
+      const h = (brute ? 30 : 24) * SCALE;
       ctx.save();
       ctx.translate(z.x, z.y);
       ctx.filter = "none";
@@ -436,7 +438,7 @@ export class Renderer {
     ctx.strokeStyle = "#ffe7b3";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(m.x, m.y, 12 + (1 - a) * 10, 0, 7);
+    ctx.arc(m.x, m.y, (12 + (1 - a) * 10) * SCALE, 0, 7);
     ctx.stroke();
     ctx.restore();
   }
@@ -453,7 +455,7 @@ export class Renderer {
 
   _floaters() {
     const ctx = this.ctx;
-    ctx.font = "800 13px Nunito, sans-serif";
+    ctx.font = `800 ${Math.round(13 * SCALE)}px Nunito, sans-serif`;
     ctx.textAlign = "center";
     for (const f of this.game.floaters) {
       ctx.globalAlpha = clamp01(f.t);
@@ -478,7 +480,7 @@ export class Renderer {
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = "destination-out";
     const lights = [];
-    lights.push({ x: g.player.x, y: g.player.y, r: 168, p: 0.88 });
+    lights.push({ x: g.player.x, y: g.player.y, r: 168 * SCALE, p: 0.88 });
     const c = g.world.cabin;
     lights.push({ x: c.x, y: c.y + 10, r: 175, p: 0.9 });
     for (const t of g.world.torches) lights.push({ x: t.x, y: t.y, r: 140, p: 0.96 });

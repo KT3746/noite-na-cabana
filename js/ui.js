@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=1.0.6";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.0.6";
-import { MODE, PHASE } from "./game.js?v=1.0.6";
+import { VERSION } from "./version.js?v=1.0.7";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.0.7";
+import { MODE, PHASE } from "./game.js?v=1.0.7";
 
 export function bindUI(game, audio) {
   const $ = (id) => document.getElementById(id);
