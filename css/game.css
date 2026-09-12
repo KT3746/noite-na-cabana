@@ -66,6 +66,7 @@ body {
   height: 100%;
   cursor: crosshair;
   background: #1c2a1a;
+  image-rendering: auto;
 }
 
 .overlay {

@@ -1,5 +1,6 @@
 import {
   TILE,
+  SCALE,
   WEAPONS,
   RECIPES,
   canPay,
@@ -8,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.0.6";
+} from "./data.js?v=1.0.7";
 import {
   createWorld,
   T,
@@ -17,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.0.6";
-import { STORAGE_KEY } from "./version.js?v=1.0.6";
+} from "./world.js?v=1.0.7";
+import { STORAGE_KEY } from "./version.js?v=1.0.7";
 
 export const MODE = {
   MENU: "menu",
@@ -68,10 +69,10 @@ export class Game {
     const door = this.world.cabin;
     this.player = {
       x: door.doorX,
-      y: door.doorY + 28,
+      y: door.doorY + 28 * SCALE,
       vx: 0,
       vy: 0,
-      r: 10,
+      r: Math.round(10 * SCALE),
       hp: 140,
       maxHp: 140,
       facing: 0,
@@ -297,7 +298,7 @@ export class Game {
 
   _updatePlayer(dt, input) {
     const p = this.player;
-    const speed = 118;
+    const speed = 118 * SCALE;
     const mx = input.moveX;
     const my = input.moveY;
     moveWithCollide(this.world, p, mx * speed * dt, my * speed * dt, p.r, false);
@@ -418,7 +419,7 @@ export class Game {
       if (!z || z === p || z.hp <= 0) continue;
       if (!Number.isFinite(z.x) || !Number.isFinite(z.y)) continue;
       const d = dist(p.x, p.y, z.x, z.y);
-      if (!Number.isFinite(d) || d > w.alcance + (z.r || 12) + 22) continue;
+      if (!Number.isFinite(d) || d > w.alcance + (z.r || 12 * SCALE) + 22 * SCALE) continue;
       const a = Math.atan2(z.y - p.y, z.x - p.x);
       const diff = Math.abs(Math.atan2(Math.sin(a - ang), Math.cos(a - ang)));
       if (d > 62 && diff > 1.95) continue;
@@ -559,7 +560,7 @@ export class Game {
       return;
     }
     const c = this.world.cabin;
-    if (dist(this.player.x, this.player.y, c.x, c.y) > 90) {
+    if (dist(this.player.x, this.player.y, c.x, c.y) > 90 * SCALE) {
       this.toast("Chegue mais perto da cabana.");
       return;
     }
@@ -770,7 +771,7 @@ export class Game {
       z.facing = ang;
       const night = this.nightsSurvived + 1;
       const nMul = night === 1 ? 0.85 : night === 2 ? 0.92 : 1;
-      const spd = (z.kind === "corredor" ? 74 : z.kind === "bruto" ? 24 : 32) * nMul * (z.slow ? 0.55 : 1);
+      const spd = (z.kind === "corredor" ? 111 : z.kind === "bruto" ? 36 : 48) * nMul * (z.slow ? 0.55 : 1);
       z.slow = Math.max(0, (z.slow || 0) - dt);
       let dx = Math.cos(ang) * spd * dt;
       let dy = Math.sin(ang) * spd * dt;
@@ -824,7 +825,7 @@ export class Game {
       }
       for (const z of this.zombies) {
         if (z.hp <= 0) continue;
-        const r = z.kind === "bruto" ? 15 : 11;
+        const r = (z.kind === "bruto" ? 15 : 11) * SCALE;
         if (dist(a.x, a.y, z.x, z.y) < r + 14) {
           this._hurtZombie(z, a.dmg, a.vx * 0.15, a.vy * 0.15);
           a.life = 0;

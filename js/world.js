@@ -1,4 +1,4 @@
-import { TILE, hash2, irand, rand } from "./data.js?v=1.0.6";
+import { TILE, hash2, irand, rand } from "./data.js?v=1.0.7";
 
 export const T = {
   GRASS: 0,
