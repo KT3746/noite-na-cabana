@@ -1,18 +1,18 @@
 :root {
-  --bg: #0d1410;
-  --panel: #1a1410ee;
-  --panel-solid: #231c16;
+  --bg: #070a0c;
+  --panel: #101418ee;
+  --panel-solid: #141a1e;
   --wood: #5c4033;
   --wood-hi: #8b5e3c;
-  --ink: #f4e8d0;
-  --muted: #c9b89a;
-  --gold: #f2c14e;
-  --danger: #e85d4c;
-  --ok: #7dce82;
-  --night: #3d6ea8;
-  --day: #f4d35e;
-  --shadow: 0 10px 28px #00000066;
-  --radius: 14px;
+  --ink: #e6e0d4;
+  --muted: #9a9286;
+  --gold: #c4a060;
+  --danger: #b83030;
+  --ok: #6a8a48;
+  --night: #1e3a5c;
+  --day: #c4a060;
+  --shadow: 0 12px 32px #00000099;
+  --radius: 10px;
   --z-world: 1;
   --z-hud: 20;
   --z-craft: 25;
@@ -36,7 +36,7 @@ body {
   height: 100dvh;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+  font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
   overflow: hidden;
   overscroll-behavior: none;
   position: relative;
@@ -99,7 +99,7 @@ button {
   width: 100%;
   height: 100%;
   cursor: crosshair;
-  background: #1c2a1a;
+  background: #0c1210;
   image-rendering: auto;
 }
 
@@ -130,8 +130,8 @@ button {
   position: relative;
   width: min(520px, 100%);
   background: var(--panel-solid);
-  border: 2px solid #d4a57455;
-  border-radius: 18px;
+  border: 1px solid #3a445055;
+  border-radius: 12px;
   padding: 22px 22px 18px;
   box-shadow: var(--shadow);
   /* sem backdrop-filter/transform: no Safari/Chrome mobile isso
@@ -141,12 +141,15 @@ button {
 }
 
 .card h1 {
-  font-family: "Lilita One", "Nunito", sans-serif;
+  font-family: "Lilita One", "Source Sans 3", sans-serif;
   font-size: clamp(28px, 7vw, 44px);
   letter-spacing: 0.5px;
   margin: 0 0 6px;
-  color: #ffe7b3;
-  text-shadow: 0 3px 0 #3a2414;
+  color: #e8e2d6;
+  text-shadow: 0 2px 12px #000000aa;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
 }
 
 .tagline {
@@ -185,13 +188,14 @@ button {
 button,
 .btn {
   appearance: none;
-  border: 0;
-  border-radius: 12px;
+  border: 1px solid #4a4030;
+  border-radius: 8px;
   padding: 12px 16px;
-  font: 800 16px/1 "Nunito", sans-serif;
-  color: #2a1c10;
-  background: linear-gradient(#ffe08a, #e0a84a);
-  box-shadow: 0 3px 0 #8a5a1a;
+  font: 700 15px/1 "Source Sans 3", sans-serif;
+  letter-spacing: 0.4px;
+  color: #e8e2d6;
+  background: linear-gradient(#3a342c, #2a241c);
+  box-shadow: 0 2px 0 #0a0806, inset 0 1px 0 #5a5040;
   cursor: pointer;
 }
 
@@ -289,10 +293,10 @@ button:disabled {
   background: var(--ok);
 }
 
-.chip .bar.hp > i { background: linear-gradient(90deg, #e85d4c, #f2a365); }
+.chip .bar.hp > i { background: linear-gradient(90deg, #b83030, #f2a365); }
 .chip .bar.cabin > i { background: linear-gradient(90deg, #f2cc8f, #e09f3e); }
 
-.phase-day { color: #2a1c10; background: #f4d35e; }
+.phase-day { color: #2a1c10; background: #c4a060; }
 .phase-night { color: #eaf2ff; background: #2b4c7e; }
 
 .hud-actions {
@@ -354,7 +358,7 @@ button:disabled {
   width: 56px;
   min-height: 56px;
   border-radius: 12px;
-  border: 2px solid #d4a57455;
+  border: 1px solid #3a445055;
   background: #1a1410cc;
   color: var(--ink);
   display: flex;
@@ -374,7 +378,7 @@ button:disabled {
 
 .slot.on {
   border-color: var(--gold);
-  box-shadow: 0 0 0 2px #f2c14e55;
+  box-shadow: 0 0 0 2px #c4a06055;
 }
 
 .banner {
@@ -382,10 +386,10 @@ button:disabled {
   top: 28%;
   left: 50%;
   transform: translateX(-50%);
-  background: #1a1410ee;
-  border: 2px solid #f2c14e88;
+  background: #101418ee;
+  border: 2px solid #c4a06088;
   color: #ffe7b3;
-  font-family: "Lilita One", sans-serif;
+  font-family: "Oswald", sans-serif;
   font-size: clamp(18px, 4.6vw, 32px);
   padding: 10px 22px;
   border-radius: 12px;
@@ -425,7 +429,7 @@ button:disabled {
   max-height: min(62vh, 460px);
   overflow: auto;
   background: var(--panel);
-  border: 2px solid #d4a57455;
+  border: 1px solid #3a445055;
   border-radius: 16px;
   padding: 12px;
   box-shadow: var(--shadow);
@@ -500,7 +504,7 @@ button:disabled {
 }
 
 .stick.is-active {
-  border-color: #f2c14e;
+  border-color: #c4a060;
   background: #00000077;
 }
 
@@ -511,7 +515,7 @@ button:disabled {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #f2c14e;
+  background: #c4a060;
   border: 2px solid #fff;
   box-shadow: 0 2px 8px #00000066;
   transform: translate(-50%, -50%);
@@ -781,4 +785,15 @@ button:disabled {
     font-size: 9px;
     padding: 3px 3px;
   }
+}
+
+button.primary,
+#btn-start,
+#btn-restart,
+#btn-noite,
+.touch-actions #btn-atk {
+  color: #f0e8dc;
+  border-color: #6a3020;
+  background: linear-gradient(#5a2820, #3a1812);
+  box-shadow: 0 2px 0 #1a0806, inset 0 1px 0 #8a4030;
 }
